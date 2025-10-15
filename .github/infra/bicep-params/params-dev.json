@@ -1,0 +1,31 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "appName": {
+            "value": "dignus-candidate"
+        },
+        "sku": {
+            "value": "B2"
+        },
+        "ambiente":{
+            "value":"dev"
+        },
+        "tipo":{
+            "value":"back"
+        },
+        "product":{
+            "value":"infradevops"
+        },
+        "project":{
+            "value":"devops"
+        },
+        "cost_center":{
+            "value":"300500"
+        },
+        "dockerRepos":{
+            "value":"dignus-candidate-back"
+        }
+
+    }
+}
