@@ -1,0 +1,31 @@
+parameters:
+- name: tag
+- name: dockerRegistryServiceConnection
+- name: imageRepository
+- name: bicep
+- name: resourceGroup
+- name: bicepparams
+
+steps:
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: ${{parameters.resourceGroup}}
+    scriptType: 'pscore'
+    scriptLocation: 'inlineScript'
+    inlineScript: 'az deployment group create --resource-group ${{parameters.resourceGroup}} --template-file "$(System.DefaultWorkingDirectory)/.azuredevops/${{parameters.bicep}}" --parameters ./.azuredevops/bicep-params/${{parameters.bicepparams}} --parameters dockerImage=$(Build.buildId) --parameters dockerRepos=${{parameters.imageRepository}}'
+
+- task: replacetokens@3
+  inputs:
+    targetFiles: '**/appsettings.json'
+    tokenPrefix: '$_'
+    tokenSuffix: '_$'
+
+- task: Docker@2
+  displayName: Build and push an image to container registry
+  inputs:
+    command: buildAndPush
+    repository: '${{parameters.imageRepository}}'
+    dockerfile: $(dockerfilePath)
+    containerRegistry: ${{parameters.dockerRegistryServiceConnection}}
+    tags: |
+      ${{parameters.tag}}

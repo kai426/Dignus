@@ -1,0 +1,91 @@
+name: IaC + Build and Deploy to Azure Web App
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  # ========================
+  # Job de Infraestrutura (IaC)
+  # ========================
+  iac:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref_name == 'main' && 'prd' || 'dev' }}
+    outputs:
+      acrName: ${{ steps.deploy_bicep.outputs.acrName }}
+      webAppName: ${{ steps.deploy_bicep.outputs.webAppName }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy Bicep (infra/main.bicep)
+        id: deploy_bicep
+        run: |
+          az group exists --name ${{ secrets.RESOURCE_GROUP }} 
+          output=$(az deployment group create \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --template-file .github/infra/main.bicep \
+            --parameters .github/infra/bicep-params/params-dev.json \
+            --parameters dockerImage=${{ github.run_number }} \
+            --query "properties.outputs" -o json)
+
+          echo "Full output: $output"
+
+          webAppName=$(echo $output | jq -r '.webAppName.value')
+          acrName=$(echo $output | jq -r '.acrName.value')
+
+          echo "webAppName=$webAppName" >> $GITHUB_OUTPUT
+          echo "acrName=$acrName" >> $GITHUB_OUTPUT
+
+  # ========================
+  # Job de Build + Deploy
+  # ========================
+
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    needs: iac
+    environment: ${{ github.ref_name == 'main' && 'prd' || 'dev' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          path: Dignus.Candidate.Back
+
+      - name: Checkout Dignus.Data repository
+        uses: actions/checkout@v5
+        with:
+          repository: ${{ github.repository_owner }}/Dignus.Data
+          ref: ${{ github.ref_name }}
+          path: Dignus.Data
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure Container Registry Login
+        run: |
+          az acr login --name acrdignuscandidatedev
+
+      - name: Build and Push Docker image
+        run: |
+          IMAGE_NAME=${{ needs.iac.outputs.acrName }}.azurecr.io/dignus-candidate-back:${{ github.run_number }}
+          docker build -f Dignus.Candidate.Back/Dockerfile -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+          echo "IMAGE_NAME=$IMAGE_NAME" >> $GITHUB_ENV
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ needs.iac.outputs.webAppName }}
+          images: ${{ env.IMAGE_NAME }}
