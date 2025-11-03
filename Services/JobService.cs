@@ -231,14 +231,14 @@ namespace Dignus.Candidate.Back.Services
             }
         }
 
-        public async Task<PagedResult<JobListingDto>> GetJobCandidatesAsync(string jobId, int page = 1, int pageSize = 10)
+        public Task<PagedResult<JobListingDto>> GetJobCandidatesAsync(string jobId, int page = 1, int pageSize = 10)
         {
             try
             {
                 _logger.LogInformation("Getting candidates for job {JobId}", jobId);
-                
+
                 // TODO: Implement actual candidate retrieval
-                return new PagedResult<JobListingDto>
+                var result = new PagedResult<JobListingDto>
                 {
                     Data = new List<JobListingDto>(),
                     Pagination = new PaginationInfo
@@ -251,6 +251,7 @@ namespace Dignus.Candidate.Back.Services
                         HasPreviousPage = false
                     }
                 };
+                return Task.FromResult(result);
             }
             catch (Exception ex)
             {

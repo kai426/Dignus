@@ -174,6 +174,7 @@ builder.Services.AddScoped<Dignus.Candidate.Back.Services.Consent.IConsentServic
 
 // Admin services
 builder.Services.AddScoped<Dignus.Candidate.Back.Services.Admin.IQuestionGroupAdminService, Dignus.Candidate.Back.Services.Admin.QuestionGroupAdminService>();
+builder.Services.AddScoped<Dignus.Candidate.Back.Services.Admin.IPortugueseContentService, Dignus.Candidate.Back.Services.Admin.PortugueseContentService>();
 
 // TimeProvider for testability
 builder.Services.AddSingleton(TimeProvider.System);
@@ -236,6 +237,10 @@ builder.Services.AddControllers(options =>
     {
         options.JsonSerializerOptions.DefaultBufferSize = 1;
     }
+
+    // Allow enum serialization/deserialization as strings (e.g., "Portuguese" instead of 1)
+    // This enables the frontend to send TestType as "Portuguese", "Math", etc.
+    options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
 });
 
 // Configure Swagger/OpenAPI
@@ -323,7 +328,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseCors("DignusPolicy");
 
@@ -382,10 +387,7 @@ app.MapControllers();
 
 app.Run();
 
-/// <summary>
-/// Ensures the database exists and applies any pending migrations
-/// </summary>
-/// <param name="app">The web application instance</param>
+// Ensures the database exists and applies any pending migrations
 static async Task EnsureDatabaseAsync(WebApplication app)
 {
     using var scope = app.Services.CreateScope();
@@ -469,10 +471,17 @@ static async Task SeedQuestionGroupsAsync(DignusContextNew context, ILogger<Prog
         var seeder = new Dignus.Data.Seeders.QuestionGroupSeeder(context, seederLogger);
         await seeder.SeedAsync();
         logger.LogInformation("Question group seeding completed.");
+
+        // Seed Portuguese reading texts
+        logger.LogInformation("Running Portuguese reading text seeder...");
+        var portugueseSeederLogger = loggerFactory.CreateLogger<Dignus.Data.Seeders.PortugueseReadingTextSeeder>();
+        var portugueseSeeder = new Dignus.Data.Seeders.PortugueseReadingTextSeeder(context, portugueseSeederLogger);
+        await portugueseSeeder.SeedAsync();
+        logger.LogInformation("Portuguese reading text seeding completed.");
     }
     catch (Exception ex)
     {
-        logger.LogError(ex, "Error occurred while seeding question groups");
+        logger.LogError(ex, "Error occurred while seeding database");
         // Don't throw - seeding failure shouldn't prevent app startup
     }
 }

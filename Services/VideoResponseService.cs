@@ -25,7 +25,7 @@ public class VideoResponseService : IVideoResponseService
     private readonly IExternalAIAgentService _externalAIAgentService;
 
     // Video validation constants
-    private const long MAX_FILE_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+    private const long MAX_FILE_SIZE_BYTES = 200 * 1024 * 1024; // 200 MB
     private const int MAX_DURATION_SECONDS = 600; // 10 minutes
     private static readonly HashSet<string> ALLOWED_CONTENT_TYPES = new()
     {
@@ -195,23 +195,23 @@ public class VideoResponseService : IVideoResponseService
         _logger.LogInformation("Video response {VideoId} deleted", videoResponseId);
     }
 
-    public async Task<(bool IsValid, string ErrorMessage)> ValidateVideoFileAsync(string fileName, string contentType, long fileSizeBytes)
+    public Task<(bool IsValid, string ErrorMessage)> ValidateVideoFileAsync(string fileName, string contentType, long fileSizeBytes)
     {
         // Check file size
         if (fileSizeBytes > MAX_FILE_SIZE_BYTES)
         {
-            return (false, $"File size ({fileSizeBytes / 1024 / 1024} MB) exceeds maximum allowed size ({MAX_FILE_SIZE_BYTES / 1024 / 1024} MB)");
+            return Task.FromResult<(bool, string)>((false, $"File size ({fileSizeBytes / 1024 / 1024} MB) exceeds maximum allowed size ({MAX_FILE_SIZE_BYTES / 1024 / 1024} MB)"));
         }
 
         if (fileSizeBytes == 0)
         {
-            return (false, "File is empty");
+            return Task.FromResult<(bool, string)>((false, "File is empty"));
         }
 
         // Check content type
         if (!ALLOWED_CONTENT_TYPES.Contains(contentType.ToLowerInvariant()))
         {
-            return (false, $"File type '{contentType}' is not allowed. Allowed types: {string.Join(", ", ALLOWED_CONTENT_TYPES)}");
+            return Task.FromResult<(bool, string)>((false, $"File type '{contentType}' is not allowed. Allowed types: {string.Join(", ", ALLOWED_CONTENT_TYPES)}"));
         }
 
         // Check file extension
@@ -219,10 +219,10 @@ public class VideoResponseService : IVideoResponseService
         var allowedExtensions = new[] { ".mp4", ".webm", ".mov", ".avi" };
         if (!allowedExtensions.Contains(extension))
         {
-            return (false, $"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", allowedExtensions)}");
+            return Task.FromResult<(bool, string)>((false, $"File extension '{extension}' is not allowed. Allowed extensions: {string.Join(", ", allowedExtensions)}"));
         }
 
-        return (true, string.Empty);
+        return Task.FromResult<(bool, string)>((true, string.Empty));
     }
 
     public async Task<string> GetSecureVideoUrlAsync(Guid videoResponseId, Guid candidateId, int expirationMinutes = 60)

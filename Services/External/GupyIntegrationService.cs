@@ -22,12 +22,12 @@ public class GupyIntegrationService : IGupyIntegrationService
         _useMockData = _settings.UseMockData;
     }
 
-    public async Task<GupyCandidate?> GetCandidateByCpfAsync(string cpf)
+    public Task<GupyCandidate?> GetCandidateByCpfAsync(string cpf)
     {
         if (_useMockData)
         {
             _logger.LogInformation("Using mock Gupy data for CPF: {CPF}", cpf);
-            return GetMockCandidate(cpf);
+            return Task.FromResult(GetMockCandidate(cpf));
         }
 
         try
@@ -37,21 +37,21 @@ public class GupyIntegrationService : IGupyIntegrationService
 
             // For now, return null to indicate candidate not found in Gupy
             // Real implementation would make HTTP call to Databricks API
-            return null;
+            return Task.FromResult<GupyCandidate?>(null);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error fetching candidate from Gupy for CPF: {CPF}", cpf);
-            return null;
+            return Task.FromResult<GupyCandidate?>(null);
         }
     }
 
-    public async Task<bool> SyncCandidateAsync(string cpf)
+    public Task<bool> SyncCandidateAsync(string cpf)
     {
         if (_useMockData)
         {
             _logger.LogInformation("Mock sync - skipping actual sync for CPF: {CPF}", cpf);
-            return true;
+            return Task.FromResult(true);
         }
 
         try
@@ -64,12 +64,12 @@ public class GupyIntegrationService : IGupyIntegrationService
             // 2. Wait for job completion or poll status
             // 3. Return success/failure
 
-            return false;
+            return Task.FromResult(false);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error syncing candidate from Gupy for CPF: {CPF}", cpf);
-            return false;
+            return Task.FromResult(false);
         }
     }
 
