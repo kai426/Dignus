@@ -3,6 +3,19 @@ using System.ComponentModel.DataAnnotations;
 namespace Dignus.Candidate.Back.DTOs
 {
     /// <summary>
+    /// DTO for Job basic information
+    /// </summary>
+    public class JobDto
+    {
+        public Guid Id { get; set; }
+        public string Name { get; set; } = null!;
+        public string? Description { get; set; }
+        public string? Location { get; set; }
+        public string? Company { get; set; }
+        public string Status { get; set; } = null!;
+    }
+
+    /// <summary>
     /// DTO for Job listing display (for job search and listing pages)
     /// </summary>
     public class JobListingDto

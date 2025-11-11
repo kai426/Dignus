@@ -605,6 +605,20 @@ Visit `https://localhost:7214/swagger` to explore and test the API interactively
 3. **Create Test**
    - POST `/api/v2/tests` with candidateId and testType
 
+   **Example Request:**
+   ```json
+   {
+     "candidateId": "60fd75e6-1225-44e0-a4a1-c1aa7d82b6a8",
+     "testType": "Portuguese"
+   }
+   ```
+
+   **Note:** The `testType` field accepts both string and integer formats:
+   - **String format (recommended):** `"Portuguese"`, `"Math"`, `"Psychology"`, `"VisualRetention"`, `"Interview"`
+   - **Integer format (legacy):** `1` (Portuguese), `2` (Math), `3` (Psychology), `4` (VisualRetention), `5` (Interview)
+
+   Both formats are supported for backward compatibility and developer convenience.
+
 4. **Start Test**
    - POST `/api/v2/tests/{testId}/start`
 

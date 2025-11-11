@@ -33,7 +33,7 @@ public class TestService : ITestService
         { TestType.Portuguese, 3 },     // 3 video questions (reading text handled separately)
         { TestType.Math, 2 },            // 2 video questions
         { TestType.Interview, 5 },       // 5 video interview questions
-        { TestType.Psychology, 50 },     // 50 multiple choice questions
+        { TestType.Psychology, 30 },     // 30 multiple choice questions (reduced for testing - DB has 38 available)
         { TestType.VisualRetention, 15 }
     };
 
@@ -206,21 +206,39 @@ public class TestService : ITestService
                 continue;
             }
 
-            var response = new TestQuestionResponse
+            // Check if response already exists
+            var existingResponse = await _questionResponseRepo.GetBySnapshotIdAsync(answer.QuestionSnapshotId);
+            if (existingResponse != null && existingResponse.CandidateId == test.CandidateId)
             {
-                Id = Guid.NewGuid(),
-                TestInstanceId = test.Id,
-                CandidateId = test.CandidateId,
-                QuestionSnapshotId = snapshot.Id,
-                SelectedAnswersJson = JsonSerializer.Serialize(answer.SelectedAnswers),
-                ResponseTimeMs = answer.ResponseTimeMs,
-                AnsweredAt = DateTimeOffset.UtcNow
-            };
+                _logger.LogInformation("Updating existing response for question {QuestionSnapshotId}", answer.QuestionSnapshotId);
 
-            responses.Add(response);
+                // Update existing response
+                existingResponse.SelectedAnswersJson = JsonSerializer.Serialize(answer.SelectedAnswers);
+                existingResponse.ResponseTimeMs = answer.ResponseTimeMs;
+                existingResponse.AnsweredAt = DateTimeOffset.UtcNow;
+
+                await _questionResponseRepo.UpdateAsync(existingResponse);
+                responses.Add(existingResponse);
+            }
+            else
+            {
+                // Create new response
+                var response = new TestQuestionResponse
+                {
+                    Id = Guid.NewGuid(),
+                    TestInstanceId = test.Id,
+                    CandidateId = test.CandidateId,
+                    QuestionSnapshotId = snapshot.Id,
+                    SelectedAnswersJson = JsonSerializer.Serialize(answer.SelectedAnswers),
+                    ResponseTimeMs = answer.ResponseTimeMs,
+                    AnsweredAt = DateTimeOffset.UtcNow
+                };
+
+                await _questionResponseRepo.AddAsync(response);
+                responses.Add(response);
+            }
         }
 
-        await _questionResponseRepo.AddRangeAsync(responses);
         await _questionResponseRepo.SaveAsync();
 
         // Auto-grade for objective questions

@@ -643,15 +643,15 @@ public class TestsController : ControllerBase
     /// <returns>true if authorized, false otherwise</returns>
     private bool IsAuthorizedForCandidate(Guid candidateId)
     {
-        // In development with disabled authentication, bypass IDOR checks
-        // This allows testing without proper JWT tokens
+        // Development mode: If user is not authenticated, allow all access
+        // This happens when DisableAuthentication is set to true in config
         if (!User.Identity?.IsAuthenticated ?? true)
         {
-            _logger.LogDebug("IDOR protection bypassed: User not authenticated (development mode)");
+            _logger.LogDebug("IDOR protection bypassed: Development mode (no authentication)");
             return true;
         }
 
-        // Get the authenticated user's ID from JWT claims
+        // Production mode: Verify authenticated user can only access their own data
         var authenticatedUserId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
 
         if (string.IsNullOrEmpty(authenticatedUserId))
@@ -660,14 +660,12 @@ public class TestsController : ControllerBase
             return false;
         }
 
-        // Try to parse the authenticated user ID as a Guid
         if (!Guid.TryParse(authenticatedUserId, out var parsedUserId))
         {
             _logger.LogWarning("IDOR protection: Failed to parse NameIdentifier claim '{UserId}' as Guid", authenticatedUserId);
             return false;
         }
 
-        // Verify the authenticated user matches the requested candidate
         var isAuthorized = parsedUserId == candidateId;
 
         if (!isAuthorized)

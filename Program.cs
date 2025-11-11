@@ -110,10 +110,8 @@ builder.Services.AddAutoMapper(cfg =>
 builder.Services.Configure<TestSettings>(builder.Configuration.GetSection(TestSettings.SectionName));
 builder.Services.Configure<AzureStorageSettings>(builder.Configuration.GetSection("AzureStorage"));
 builder.Services.Configure<MediaUploadSettings>(builder.Configuration.GetSection("MediaUploadSettings"));
-builder.Services.Configure<AISettings>(builder.Configuration.GetSection("AISettings"));
 builder.Services.Configure<ExternalAIAgentSettings>(builder.Configuration.GetSection("ExternalAIAgent"));
 builder.Services.Configure<DatabricksSettings>(builder.Configuration.GetSection("Databricks"));
-builder.Services.Configure<GupySettings>(builder.Configuration.GetSection(GupySettings.SectionName));
 builder.Services.Configure<Dignus.Candidate.Back.Services.Auth.JwtSettings>(builder.Configuration.GetSection(Dignus.Candidate.Back.Services.Auth.JwtSettings.SectionName));
 builder.Services.Configure<Dignus.Candidate.Back.Services.Email.EmailSettings>(builder.Configuration.GetSection(Dignus.Candidate.Back.Services.Email.EmailSettings.SectionName));
 builder.Services.Configure<Dignus.Candidate.Back.Services.Consent.ConsentOptions>(builder.Configuration.GetSection(Dignus.Candidate.Back.Services.Consent.ConsentOptions.SectionName));
@@ -163,9 +161,6 @@ builder.Services.AddScoped<IJobService, JobService>();
 builder.Services.AddScoped<Dignus.Candidate.Back.Services.Auth.IJwtTokenService, Dignus.Candidate.Back.Services.Auth.JwtTokenService>();
 builder.Services.AddScoped<Dignus.Candidate.Back.Services.Auth.ICandidateAuthenticationService, Dignus.Candidate.Back.Services.Auth.CandidateAuthenticationService>();
 
-// External integration services
-builder.Services.AddScoped<Dignus.Candidate.Back.Services.External.IGupyIntegrationService, Dignus.Candidate.Back.Services.External.GupyIntegrationService>();
-
 // Email service
 builder.Services.AddScoped<Dignus.Candidate.Back.Services.Email.IEmailService, Dignus.Candidate.Back.Services.Email.EmailService>();
 
@@ -184,11 +179,8 @@ builder.Services.AddScoped<IEvaluationEngineService, EvaluationEngineService>();
 builder.Services.AddScoped<IReportGenerationService, ReportGenerationService>();
 builder.Services.AddScoped<IBenchmarkService, BenchmarkService>();
 
-// Configure Databricks Integration Service
-builder.Services.AddScoped<IDatabricksIntegrationService, DatabricksIntegrationService>();
-
-// Configure LangChain and Google AI services
-// GoogleProvider removed - AI analysis handled by separate application
+// Configure Databricks SQL Service (NEW - uses SQL Statement Execution API)
+builder.Services.AddHttpClient<IDatabricksSqlService, DatabricksSqlService>();
 
 // Configure External AI Agent Service
 builder.Services.AddHttpClient<IExternalAIAgentService, ExternalAIAgentService>(client =>
@@ -199,11 +191,6 @@ builder.Services.AddHttpClient<IExternalAIAgentService, ExternalAIAgentService>(
         client.BaseAddress = new Uri(settings.BaseUrl);
     }
     client.Timeout = TimeSpan.FromSeconds(settings?.TimeoutSeconds ?? 30);
-}).AddStandardResilienceHandler();
-
-builder.Services.AddHttpClient<IDatabricksIntegrationService, DatabricksIntegrationService>(client =>
-{
-    client.Timeout = TimeSpan.FromMinutes(30);
 }).AddStandardResilienceHandler();
 
 // Add health checks

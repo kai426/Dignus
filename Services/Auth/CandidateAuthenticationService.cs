@@ -1,6 +1,5 @@
 using Dignus.Data.Repositories.Interfaces;
 using Dignus.Candidate.Back.Services.Email;
-using Dignus.Candidate.Back.Services.External;
 using System.Security.Cryptography;
 
 namespace Dignus.Candidate.Back.Services.Auth;
@@ -9,7 +8,6 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
 {
     private readonly ICandidateAuthTokenRepository _tokenRepo;
     private readonly ICandidateRepository _candidateRepo;
-    private readonly IGupyIntegrationService _gupyService;
     private readonly IEmailService _emailService;
     private readonly IJwtTokenService _jwtService;
     private readonly ILogger<CandidateAuthenticationService> _logger;
@@ -22,7 +20,6 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
     public CandidateAuthenticationService(
         ICandidateAuthTokenRepository tokenRepo,
         ICandidateRepository candidateRepo,
-        IGupyIntegrationService gupyService,
         IEmailService emailService,
         IJwtTokenService jwtService,
         ILogger<CandidateAuthenticationService> logger,
@@ -30,7 +27,6 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
     {
         _tokenRepo = tokenRepo;
         _candidateRepo = candidateRepo;
-        _gupyService = gupyService;
         _emailService = emailService;
         _jwtService = jwtService;
         _logger = logger;
@@ -73,24 +69,24 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
                 };
             }
 
-            // Verify candidate exists in Gupy
-            var gupyCandidate = await _gupyService.GetCandidateByCpfAsync(cpf);
-            if (gupyCandidate == null)
+            // Verify candidate exists in local database
+            var candidate = await _candidateRepo.GetByCpfAsync(cpf);
+            if (candidate == null)
             {
-                _logger.LogWarning("Authentication attempt for CPF not found in Gupy: {CPF}", cpf);
+                _logger.LogWarning("Authentication attempt for CPF not found in database: {CPF}", cpf);
                 return new AuthTokenRequestResult
                 {
                     Success = false,
                     ErrorCode = "CANDIDATE_NOT_FOUND",
-                    Message = "Candidato não encontrado no sistema Gupy. Verifique se você possui uma candidatura ativa."
+                    Message = "Candidato não encontrado no sistema. Verifique se você possui uma candidatura ativa."
                 };
             }
 
             // Verify email matches
-            if (!string.Equals(gupyCandidate.Email, email, StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(candidate.Email, email, StringComparison.OrdinalIgnoreCase))
             {
                 _logger.LogWarning("Email mismatch for CPF {CPF}. Expected: {Expected}, Got: {Got}",
-                    cpf, gupyCandidate.Email, email);
+                    cpf, candidate.Email, email);
                 return new AuthTokenRequestResult
                 {
                     Success = false,
@@ -116,7 +112,7 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
             // Send email
             var emailSent = await _emailService.SendAuthenticationTokenEmailAsync(
                 email,
-                gupyCandidate.Name,
+                candidate.Name,
                 tokenCode);
 
             if (!emailSent)
@@ -190,6 +186,9 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
             }
 
             // Validate token code
+            _logger.LogInformation("===== COMPARING TOKENS - Stored: '{StoredToken}' vs Provided: '{ProvidedToken}' =====",
+                token.TokenCode, tokenCode);
+
             if (token.TokenCode != tokenCode)
             {
                 await _tokenRepo.IncrementFailedAttemptsAsync(cpf);
@@ -225,53 +224,21 @@ public class CandidateAuthenticationService : ICandidateAuthenticationService
             await _tokenRepo.MarkAsUsedAsync(token.Id);
             await _tokenRepo.ClearLockoutAsync(cpf);
 
-            // Get or create candidate in local database
+            // Get candidate from local database
             var candidate = await _candidateRepo.GetByCpfAsync(cpf);
-
-            bool requiresLGPDConsent = false;
 
             if (candidate == null)
             {
-                // First time login - fetch from Gupy and create candidate
-                var gupyCandidate = await _gupyService.GetCandidateByCpfAsync(cpf);
-
-                if (gupyCandidate == null)
+                _logger.LogError("Candidate not found in database after token validation for CPF: {CPF}", cpf);
+                return new AuthTokenValidationResult
                 {
-                    return new AuthTokenValidationResult
-                    {
-                        Success = false,
-                        ErrorCode = "CANDIDATE_NOT_FOUND",
-                        Message = "Candidato não encontrado."
-                    };
-                }
-
-                // Create candidate record
-                candidate = new Dignus.Data.Models.Candidate
-                {
-                    Id = Guid.NewGuid(),
-                    Cpf = cpf,
-                    Email = token.Email,
-                    Name = gupyCandidate.Name,
-                    BirthDate = DateTime.UtcNow, // TODO: Get from Gupy
-                    GupyId = gupyCandidate.GupyId,
-                    HasAcceptedLGPD = false,
-                    IsActive = true,
-                    CreatedAt = _timeProvider.GetUtcNow(),
-                    JobId = Guid.Empty, // TODO: Map from Gupy
-                    RecruiterId = Guid.Empty // TODO: Assign recruiter
+                    Success = false,
+                    ErrorCode = "CANDIDATE_NOT_FOUND",
+                    Message = "Candidato não encontrado no sistema."
                 };
-
-                await _candidateRepo.AddAsync(candidate);
-                await _candidateRepo.SaveChangesAsync();
-
-                requiresLGPDConsent = true;
-
-                _logger.LogInformation("Created new candidate record for CPF: {CPF}", cpf);
             }
-            else
-            {
-                requiresLGPDConsent = !candidate.HasAcceptedLGPD;
-            }
+
+            bool requiresLGPDConsent = !candidate.HasAcceptedLGPD;
 
             // Generate JWT tokens
             var accessToken = _jwtService.GenerateAccessToken(

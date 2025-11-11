@@ -605,22 +605,22 @@ namespace Dignus.Candidate.Back.DTOs
         /// Strong recommendation to hire
         /// </summary>
         StronglyRecommended,
-        
+
         /// <summary>
         /// Recommended with some reservations
         /// </summary>
         Recommended,
-        
+
         /// <summary>
         /// Conditional recommendation
         /// </summary>
         Conditional,
-        
+
         /// <summary>
         /// Not recommended at this time
         /// </summary>
         NotRecommended,
-        
+
         /// <summary>
         /// Strong recommendation not to hire
         /// </summary>
@@ -640,5 +640,178 @@ namespace Dignus.Candidate.Back.DTOs
         /// Rejected
         /// </summary>
         Rejected
+    }
+
+    /// <summary>
+    /// DTO for audio evaluation results
+    /// </summary>
+    public class AudioEvaluationDto
+    {
+        /// <summary>
+        /// The ID of the audio submission
+        /// </summary>
+        public Guid AudioSubmissionId { get; set; }
+
+        /// <summary>
+        /// Communication clarity score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int CommunicationScore { get; set; }
+
+        /// <summary>
+        /// Grammar and language proficiency score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int GrammarScore { get; set; }
+
+        /// <summary>
+        /// Vocabulary richness score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int VocabularyScore { get; set; }
+
+        /// <summary>
+        /// Overall fluency score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int FluencyScore { get; set; }
+
+        /// <summary>
+        /// Content relevance to the question (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int ContentRelevanceScore { get; set; }
+
+        /// <summary>
+        /// Detailed feedback on the audio response
+        /// </summary>
+        public string DetailedFeedback { get; set; } = null!;
+
+        /// <summary>
+        /// Strengths identified in the response
+        /// </summary>
+        public List<string> Strengths { get; set; } = new();
+
+        /// <summary>
+        /// Areas for improvement
+        /// </summary>
+        public List<string> ImprovementAreas { get; set; } = new();
+
+        /// <summary>
+        /// Overall evaluation score (calculated from component scores)
+        /// </summary>
+        [Range(0, 100)]
+        public int OverallScore { get; set; }
+
+        /// <summary>
+        /// Evaluation timestamp
+        /// </summary>
+        public DateTimeOffset EvaluatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for behavioral evaluation from video analysis
+    /// </summary>
+    public class BehavioralEvaluationDto
+    {
+        /// <summary>
+        /// The ID of the video interview
+        /// </summary>
+        public Guid VideoInterviewId { get; set; }
+
+        /// <summary>
+        /// Communication skills score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int CommunicationSkillsScore { get; set; }
+
+        /// <summary>
+        /// Professional presence score (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int ProfessionalPresenceScore { get; set; }
+
+        /// <summary>
+        /// Emotional intelligence indicators (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int EmotionalIntelligenceScore { get; set; }
+
+        /// <summary>
+        /// Confidence level assessment (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int ConfidenceScore { get; set; }
+
+        /// <summary>
+        /// Authenticity and genuineness (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int AuthenticityScore { get; set; }
+
+        /// <summary>
+        /// Stress management indicators (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int StressManagementScore { get; set; }
+
+        /// <summary>
+        /// Detailed behavioral feedback
+        /// </summary>
+        public string DetailedFeedback { get; set; } = null!;
+
+        /// <summary>
+        /// Key behavioral strengths identified
+        /// </summary>
+        public List<string> BehavioralStrengths { get; set; } = new();
+
+        /// <summary>
+        /// Areas for behavioral improvement
+        /// </summary>
+        public List<string> BehavioralImprovementAreas { get; set; } = new();
+
+        /// <summary>
+        /// Overall behavioral score (calculated from component scores)
+        /// </summary>
+        [Range(0, 100)]
+        public int OverallBehavioralScore { get; set; }
+
+        /// <summary>
+        /// Personality traits detected
+        /// </summary>
+        public List<PersonalityTraitDto> PersonalityTraits { get; set; } = new();
+
+        /// <summary>
+        /// Evaluation timestamp
+        /// </summary>
+        public DateTimeOffset EvaluatedAt { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for personality trait detection
+    /// </summary>
+    public class PersonalityTraitDto
+    {
+        /// <summary>
+        /// Name of the personality trait
+        /// </summary>
+        public string TraitName { get; set; } = null!;
+
+        /// <summary>
+        /// Strength of the trait (0-100)
+        /// </summary>
+        [Range(0, 100)]
+        public int Strength { get; set; }
+
+        /// <summary>
+        /// Confidence in trait detection (0.0-1.0)
+        /// </summary>
+        [Range(0.0, 1.0)]
+        public double Confidence { get; set; }
+
+        /// <summary>
+        /// Description of how the trait manifested
+        /// </summary>
+        public string Description { get; set; } = null!;
     }
 }

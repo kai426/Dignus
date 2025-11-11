@@ -11,15 +11,13 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.25.0" />
-    <PackageReference Include="Google.Cloud.AIPlatform.V1" Version="3.45.0" />
-    <PackageReference Include="LangChain" Version="0.17.0" />
-    <PackageReference Include="LangChain.Providers.Google" Version="0.17.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.2" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="9.0.2" NoWarn="NU1605" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.2" />
     <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="9.8.0" />
     <PackageReference Include="Microsoft.Identity.Web" Version="3.0.0" />
     <PackageReference Include="Microsoft.Identity.Web.DownstreamApi" Version="3.0.0" />
+    <PackageReference Include="SendGrid" Version="9.29.3" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="9.0.0" />

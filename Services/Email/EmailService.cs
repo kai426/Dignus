@@ -1,6 +1,6 @@
-using System.Net;
-using System.Net.Mail;
 using Microsoft.Extensions.Options;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace Dignus.Candidate.Back.Services.Email;
 
@@ -8,6 +8,7 @@ public class EmailService : IEmailService
 {
     private readonly EmailSettings _settings;
     private readonly ILogger<EmailService> _logger;
+    private readonly ISendGridClient _sendGridClient;
 
     public EmailService(
         IOptions<EmailSettings> settings,
@@ -15,6 +16,17 @@ public class EmailService : IEmailService
     {
         _settings = settings.Value;
         _logger = logger;
+
+        // Initialize SendGrid client with API key
+        if (!string.IsNullOrWhiteSpace(_settings.SendGridApiKey))
+        {
+            _sendGridClient = new SendGridClient(_settings.SendGridApiKey);
+        }
+        else
+        {
+            _logger.LogWarning("SendGrid API key not configured. Email sending will be mocked.");
+            _sendGridClient = null!;
+        }
     }
 
     public async Task<bool> SendAuthenticationTokenEmailAsync(
@@ -22,6 +34,7 @@ public class EmailService : IEmailService
         string candidateName,
         string tokenCode)
     {
+        _logger.LogInformation("===== AUTH TOKEN CODE: {TokenCode} for {Email} =====", tokenCode, toEmail);
         var subject = "Seu código de verificação - Dignus";
 
         var htmlBody = $@"
@@ -178,34 +191,67 @@ public class EmailService : IEmailService
             return true;
         }
 
+        // Validate SendGrid client is available
+        if (_sendGridClient == null)
+        {
+            _logger.LogError("SendGrid client not initialized. Cannot send email to {Email}", toEmail);
+            return false;
+        }
+
         try
         {
-            using var client = new SmtpClient(_settings.SmtpHost, _settings.SmtpPort)
+            var from = new EmailAddress(_settings.FromEmail, _settings.FromName);
+            var to = new EmailAddress(toEmail);
+            var plainTextContent = StripHtmlTags(htmlBody); // Generate plain text version
+
+            var msg = MailHelper.CreateSingleEmail(
+                from,
+                to,
+                subject,
+                plainTextContent,
+                htmlBody);
+
+            var response = await _sendGridClient.SendEmailAsync(msg);
+
+            // SendGrid returns 202 Accepted for successfully queued emails
+            if (response.IsSuccessStatusCode)
             {
-                EnableSsl = _settings.EnableSsl,
-                Credentials = new NetworkCredential(_settings.SmtpUsername, _settings.SmtpPassword)
-            };
-
-            var mailMessage = new MailMessage
+                _logger.LogInformation(
+                    "Email sent successfully to {Email} via SendGrid. Status: {StatusCode}",
+                    toEmail,
+                    response.StatusCode);
+                return true;
+            }
+            else
             {
-                From = new MailAddress(_settings.FromEmail, _settings.FromName),
-                Subject = subject,
-                Body = htmlBody,
-                IsBodyHtml = true
-            };
-
-            mailMessage.To.Add(toEmail);
-
-            await client.SendMailAsync(mailMessage);
-
-            _logger.LogInformation("Email sent successfully to {Email}", toEmail);
-            return true;
+                var responseBody = await response.Body.ReadAsStringAsync();
+                _logger.LogError(
+                    "Failed to send email to {Email}. Status: {StatusCode}, Response: {Response}",
+                    toEmail,
+                    response.StatusCode,
+                    responseBody);
+                return false;
+            }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email to {Email}", toEmail);
+            _logger.LogError(ex, "Exception occurred while sending email to {Email}", toEmail);
             return false;
         }
+    }
+
+    /// <summary>
+    /// Strips HTML tags to create a plain text version of the email
+    /// </summary>
+    private string StripHtmlTags(string html)
+    {
+        if (string.IsNullOrWhiteSpace(html))
+            return string.Empty;
+
+        // Simple HTML tag removal - for production consider using HtmlAgilityPack
+        var plainText = System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty);
+        plainText = System.Net.WebUtility.HtmlDecode(plainText);
+        return plainText.Trim();
     }
 }
 
@@ -213,12 +259,24 @@ public class EmailSettings
 {
     public const string SectionName = "Email";
 
-    public string SmtpHost { get; set; } = "smtp.gmail.com";
-    public int SmtpPort { get; set; } = 587;
-    public bool EnableSsl { get; set; } = true;
-    public string SmtpUsername { get; set; } = string.Empty;
-    public string SmtpPassword { get; set; } = string.Empty;
+    /// <summary>
+    /// SendGrid API Key for authentication
+    /// Get from: https://app.sendgrid.com/settings/api_keys
+    /// </summary>
+    public string SendGridApiKey { get; set; } = string.Empty;
+
+    /// <summary>
+    /// From email address (must be verified in SendGrid)
+    /// </summary>
     public string FromEmail { get; set; } = "noreply@dignus.com";
+
+    /// <summary>
+    /// From name displayed in emails
+    /// </summary>
     public string FromName { get; set; } = "Dignus Platform";
+
+    /// <summary>
+    /// Use mock email (log only, don't actually send)
+    /// </summary>
     public bool UseMockEmail { get; set; } = true;
 }
