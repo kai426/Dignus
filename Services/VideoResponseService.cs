@@ -18,6 +18,7 @@ public class VideoResponseService : IVideoResponseService
 {
     private readonly ITestVideoResponseRepository _videoResponseRepo;
     private readonly ITestInstanceRepository _testInstanceRepo;
+    private readonly ITestQuestionSnapshotRepository _questionSnapshotRepo;
     private readonly BlobServiceClient _blobServiceClient;
     private readonly AzureStorageSettings _storageSettings;
     private readonly IMapper _mapper;
@@ -38,6 +39,7 @@ public class VideoResponseService : IVideoResponseService
     public VideoResponseService(
         ITestVideoResponseRepository videoResponseRepo,
         ITestInstanceRepository testInstanceRepo,
+        ITestQuestionSnapshotRepository questionSnapshotRepo,
         BlobServiceClient blobServiceClient,
         IOptions<AzureStorageSettings> storageSettings,
         IMapper mapper,
@@ -46,6 +48,7 @@ public class VideoResponseService : IVideoResponseService
     {
         _videoResponseRepo = videoResponseRepo;
         _testInstanceRepo = testInstanceRepo;
+        _questionSnapshotRepo = questionSnapshotRepo;
         _blobServiceClient = blobServiceClient;
         _storageSettings = storageSettings.Value;
         _mapper = mapper;
@@ -55,8 +58,8 @@ public class VideoResponseService : IVideoResponseService
 
     public async Task<VideoResponseDto> UploadVideoResponseAsync(UploadVideoRequest request)
     {
-        _logger.LogInformation("Uploading video response for test {TestId}, question {QuestionNumber}",
-            request.TestId, request.QuestionNumber);
+        _logger.LogInformation("Uploading video response for test {TestId}, questionSnapshotId {QuestionSnapshotId}",
+            request.TestId, request.QuestionSnapshotId);
 
         // 1. Validate test and ownership
         var test = await _testInstanceRepo.GetByIdAsync(request.TestId);
@@ -75,7 +78,10 @@ public class VideoResponseService : IVideoResponseService
             throw new InvalidOperationException("Cannot upload videos to a submitted test");
         }
 
-        // 2. Validate video file
+        // 2. Derive QuestionNumber from QuestionSnapshotId if not provided
+        int questionNumber = request.QuestionNumber ?? await DeriveQuestionNumberAsync(request.TestId, request.QuestionSnapshotId);
+
+        // 3. Validate video file
         var (isValid, errorMessage) = await ValidateVideoFileAsync(
             request.VideoFile.FileName,
             request.VideoFile.ContentType,
@@ -86,17 +92,17 @@ public class VideoResponseService : IVideoResponseService
             throw new InvalidOperationException(errorMessage);
         }
 
-        // 3. Upload to Azure Blob Storage
-        var blobUrl = await UploadToBlobStorageAsync(request.VideoFile, request.TestId, request.CandidateId, request.QuestionNumber);
+        // 4. Upload to Azure Blob Storage
+        var blobUrl = await UploadToBlobStorageAsync(request.VideoFile, request.TestId, request.CandidateId, questionNumber);
 
-        // 4. Create video response entity
+        // 5. Create video response entity
         var videoResponse = new TestVideoResponse
         {
             Id = Guid.NewGuid(),
             TestInstanceId = request.TestId,
             CandidateId = request.CandidateId,
             QuestionSnapshotId = request.QuestionSnapshotId,
-            QuestionNumber = request.QuestionNumber,
+            QuestionNumber = questionNumber,
             ResponseType = request.ResponseType, // For Portuguese: Reading or QuestionAnswer
             BlobUrl = blobUrl,
             BlobContainerPath = GetContainerName(request.TestId),
@@ -265,6 +271,30 @@ public class VideoResponseService : IVideoResponseService
     }
 
     #region Private Helper Methods
+
+    private async Task<int> DeriveQuestionNumberAsync(Guid testId, Guid? questionSnapshotId)
+    {
+        if (questionSnapshotId == null)
+        {
+            // If no question snapshot ID provided, generate a sequential number based on existing videos
+            var existingVideos = await _videoResponseRepo.GetByTestIdAsync(testId);
+            return existingVideos.Count + 1;
+        }
+
+        // Look up the question snapshot to get its order
+        var questionSnapshot = await _questionSnapshotRepo.GetByIdAsync(questionSnapshotId.Value);
+        if (questionSnapshot == null)
+        {
+            throw new NotFoundException("QuestionSnapshot", questionSnapshotId.Value);
+        }
+
+        if (questionSnapshot.TestInstanceId != testId)
+        {
+            throw new InvalidOperationException($"Question snapshot {questionSnapshotId} does not belong to test {testId}");
+        }
+
+        return questionSnapshot.QuestionOrder;
+    }
 
     private async Task<string> UploadToBlobStorageAsync(IFormFile file, Guid testId, Guid candidateId, int questionNumber)
     {

@@ -74,30 +74,10 @@ namespace Dignus.Candidate.Back.Controllers
             }
         }
 
-        /// <summary>
-        /// Get candidate progress
-        /// </summary>
-        /// <param name="candidateId">Candidate ID</param>
-        /// <returns>Progress information</returns>
-        [HttpGet("progress/{candidateId:guid}")]
-        public async Task<ActionResult<ProgressDto>> GetProgress(Guid candidateId)
-        {
-            try
-            {
-                var progress = await _candidateService.GetCandidateProgressAsync(candidateId);
-                if (progress == null)
-                {
-                    return NotFound($"Candidate with ID {candidateId} not found");
-                }
-
-                return Ok(progress);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving progress for candidate {CandidateId}", candidateId);
-                return StatusCode(500, "Internal server error");
-            }
-        }
+        // NOTE: Progress endpoint has been moved to v2 API
+        // Use: GET /api/v2/tests/candidate/{candidateId}/progress
+        // The old endpoint at /api/auth/progress/{candidateId} has been removed
+        // as it returned mock data instead of real test progress.
 
         private string GenerateJwtToken(CandidateDto candidate)
         {

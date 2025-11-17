@@ -33,7 +33,7 @@ public class TestService : ITestService
         { TestType.Portuguese, 3 },     // 3 video questions (reading text handled separately)
         { TestType.Math, 2 },            // 2 video questions
         { TestType.Interview, 5 },       // 5 video interview questions
-        { TestType.Psychology, 30 },     // 30 multiple choice questions (reduced for testing - DB has 38 available)
+        { TestType.Psychology, 52 },     // 52 personality assessment questions - all delivered in order
         { TestType.VisualRetention, 15 }
     };
 
@@ -432,15 +432,39 @@ public class TestService : ITestService
         }
 
         // Traditional template-based tests (Psychology, VisualRetention)
-        var templates = await _questionTemplateRepo.GetRandomQuestionsAsync(
-            test.TestType,
-            questionCount,
-            difficultyLevel);
+        List<QuestionTemplate> templates;
 
-        if (templates.Count < questionCount)
+        // Psychology tests use ALL questions in order (not random selection)
+        // IMPORTANT: Ignore difficulty level - deliver ALL questions regardless of difficulty
+        if (test.TestType == TestType.Psychology)
         {
-            throw new InvalidOperationException(
-                $"Not enough questions available for {test.TestType} (requested: {questionCount}, available: {templates.Count})");
+            templates = await _questionTemplateRepo.GetAllQuestionsOrderedAsync(
+                test.TestType,
+                null); // Pass null to ignore difficulty filter
+
+            if (templates.Count == 0)
+            {
+                throw new InvalidOperationException(
+                    $"No Psychology questions available in database. Please ensure questions are seeded.");
+            }
+
+            _logger.LogInformation(
+                "Selected ALL {Count} Psychology questions in original order for test {TestId} (ignoring difficulty filter)",
+                templates.Count, test.Id);
+        }
+        else
+        {
+            // Other test types use random selection
+            templates = await _questionTemplateRepo.GetRandomQuestionsAsync(
+                test.TestType,
+                questionCount,
+                difficultyLevel);
+
+            if (templates.Count < questionCount)
+            {
+                throw new InvalidOperationException(
+                    $"Not enough questions available for {test.TestType} (requested: {questionCount}, available: {templates.Count})");
+            }
         }
 
         // Create snapshots

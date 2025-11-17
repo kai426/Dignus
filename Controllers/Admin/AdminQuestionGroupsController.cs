@@ -47,14 +47,14 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="groupId">The ID of the question group</param>
     [HttpGet("{groupId}")]
     [ProducesResponseType(typeof(QuestionGroupDetailDto), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status404NotFound)]
     public async Task<ActionResult<QuestionGroupDetailDto>> GetQuestionGroupDetails(Guid groupId)
     {
         var group = await _adminService.GetQuestionGroupDetailsAsync(groupId);
 
         if (group == null)
         {
-            return NotFound(new ErrorResponse
+            return NotFound(new AdminErrorResponse
             {
                 Error = "GROUP_NOT_FOUND",
                 Message = "Question group not found"
@@ -70,7 +70,7 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="request">Question group creation request</param>
     [HttpPost]
     [ProducesResponseType(typeof(CreateGroupResponse), StatusCodes.Status201Created)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<CreateGroupResponse>> CreateQuestionGroup(
         [FromBody] CreateQuestionGroupRequest request)
     {
@@ -83,7 +83,7 @@ public class AdminQuestionGroupsController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -107,7 +107,7 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="request">Update request</param>
     [HttpPut("{groupId}")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> UpdateQuestionGroup(
         Guid groupId,
         [FromBody] UpdateQuestionGroupRequest request)
@@ -121,7 +121,7 @@ public class AdminQuestionGroupsController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -143,7 +143,7 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="request">Update request</param>
     [HttpPut("{groupId}/questions/{questionId}")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> UpdateQuestion(
         Guid groupId,
         Guid questionId,
@@ -158,7 +158,7 @@ public class AdminQuestionGroupsController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -179,7 +179,7 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="request">Reorder request with new question orders</param>
     [HttpPatch("{groupId}/questions/reorder")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> ReorderQuestions(
         Guid groupId,
         [FromBody] ReorderQuestionsRequest request)
@@ -193,7 +193,7 @@ public class AdminQuestionGroupsController : ControllerBase
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -213,14 +213,14 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="groupId">The ID of the question group to activate</param>
     [HttpPatch("{groupId}/activate")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> ActivateGroup(Guid groupId)
     {
         var result = await _adminService.ActivateGroupAsync(groupId);
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -240,14 +240,14 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="groupId">The ID of the question group to deactivate</param>
     [HttpPatch("{groupId}/deactivate")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> DeactivateGroup(Guid groupId)
     {
         var result = await _adminService.DeactivateGroupAsync(groupId);
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -267,14 +267,14 @@ public class AdminQuestionGroupsController : ControllerBase
     /// <param name="groupId">The ID of the question group to delete</param>
     [HttpDelete("{groupId}")]
     [ProducesResponseType(typeof(SuccessResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(AdminErrorResponse), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> DeleteGroup(Guid groupId)
     {
         var result = await _adminService.DeleteGroupAsync(groupId);
 
         if (!result.Success)
         {
-            return BadRequest(new ErrorResponse
+            return BadRequest(new AdminErrorResponse
             {
                 Error = result.ErrorCode ?? "ERROR",
                 Message = result.Message
@@ -299,9 +299,9 @@ public class SuccessResponse
 }
 
 /// <summary>
-/// Standard error response
+/// Standard error response for admin endpoints
 /// </summary>
-public class ErrorResponse
+public class AdminErrorResponse
 {
     public string Error { get; set; } = null!;
     public string Message { get; set; } = null!;

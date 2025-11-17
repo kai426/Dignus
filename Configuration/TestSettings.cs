@@ -39,7 +39,7 @@ namespace Dignus.Candidate.Back.Configuration
         /// <summary>
         /// Number of Psychology test questions
         /// </summary>
-        public int Psychology { get; set; } = 12;
+        public int Psychology { get; set; } = 52;
 
         /// <summary>
         /// Number of Visual Retention test questions

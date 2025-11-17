@@ -118,7 +118,10 @@ public class SubmitTestRequest
     [Required]
     public Guid CandidateId { get; set; }
 
-    [MinLength(1, ErrorMessage = "At least one answer is required")]
+    /// <summary>
+    /// Answers for multiple-choice questions. Can be empty for video-based tests (Portuguese, Math, Interview)
+    /// where answers were already submitted via /api/v2/tests/{testId}/videos
+    /// </summary>
     public List<QuestionAnswerSubmission> Answers { get; set; } = new();
 }
 
@@ -173,18 +176,20 @@ public class TestStatusDto
 /// </summary>
 public class UploadVideoRequest
 {
-    [Required]
+    // TestId is provided via URL path parameter
     public Guid TestId { get; set; }
 
-    [Required]
+    // CandidateId is provided via query parameter or JWT token
     public Guid CandidateId { get; set; }
 
+    // QuestionSnapshotId identifies which question this video answers
     public Guid? QuestionSnapshotId { get; set; }
 
-    [Required]
+    // QuestionNumber is optional - will be derived from QuestionSnapshotId if not provided
     [Range(1, 100, ErrorMessage = "Question number must be between 1 and 100")]
-    public int QuestionNumber { get; set; }
+    public int? QuestionNumber { get; set; }
 
+    // ResponseType indicates the type of video (for Portuguese: Reading vs QuestionAnswer)
     public VideoResponseType? ResponseType { get; set; }
 
     [Required(ErrorMessage = "Video file is required")]

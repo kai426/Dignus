@@ -127,6 +127,111 @@ public class TestsController : ControllerBase
     }
 
     /// <summary>
+    /// Get candidate progress across all test types (v2)
+    /// </summary>
+    /// <remarks>
+    /// Returns comprehensive progress information including:
+    /// - Overall completion percentage
+    /// - Number of completed tests vs total tests
+    /// - Individual test progress with status, score, and completion date
+    ///
+    /// Test statuses:
+    /// - NotStarted: Test has not been created/started yet
+    /// - InProgress: Test was started but not yet submitted
+    /// - Completed: Test was submitted (includes Submitted, UnderReview, Reviewed statuses)
+    /// </remarks>
+    [HttpGet("candidate/{candidateId}/progress")]
+    [ProducesResponseType(typeof(DTOs.ProgressDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<ActionResult<DTOs.ProgressDto>> GetCandidateProgress(Guid candidateId)
+    {
+        if (!IsAuthorizedForCandidate(candidateId))
+        {
+            return Forbid();
+        }
+
+        try
+        {
+            // Get all test instances for this candidate
+            var tests = await _testService.GetCandidateTestsAsync(candidateId, null);
+
+            // Define all test types (5 total)
+            var allTestTypes = new[]
+            {
+                TestType.Portuguese,
+                TestType.Math,
+                TestType.Psychology,
+                TestType.VisualRetention,
+                TestType.Interview
+            };
+
+            // Calculate progress for each test type
+            var testProgress = new Dictionary<string, DTOs.TestProgressDto>();
+            int completedCount = 0;
+
+            foreach (var testType in allTestTypes)
+            {
+                var testInstance = tests.FirstOrDefault(t => t.TestType == testType);
+
+                if (testInstance == null)
+                {
+                    // Test not started yet
+                    testProgress[testType.ToString()] = new DTOs.TestProgressDto
+                    {
+                        TestType = testType.ToString(),
+                        Status = "NotStarted",
+                        IsCompleted = false,
+                        Score = null,
+                        CompletedAt = null
+                    };
+                }
+                else
+                {
+                    // Determine if test is completed
+                    bool isCompleted = testInstance.Status == Data.Models.TestStatus.Submitted ||
+                                     testInstance.Status == Data.Models.TestStatus.Approved ||
+                                     testInstance.Status == Data.Models.TestStatus.Rejected;
+
+                    if (isCompleted)
+                    {
+                        completedCount++;
+                    }
+
+                    testProgress[testType.ToString()] = new DTOs.TestProgressDto
+                    {
+                        TestType = testType.ToString(),
+                        Status = testInstance.Status.ToString(),
+                        IsCompleted = isCompleted,
+                        Score = testInstance.Score,
+                        CompletedAt = testInstance.CompletedAt?.DateTime
+                    };
+                }
+            }
+
+            // Calculate completion percentage
+            decimal completionPercentage = allTestTypes.Length > 0
+                ? (decimal)completedCount / allTestTypes.Length * 100
+                : 0;
+
+            var progress = new DTOs.ProgressDto
+            {
+                CandidateId = candidateId,
+                CompletionPercentage = completionPercentage,
+                CompletedTests = completedCount,
+                TotalTests = allTestTypes.Length,
+                TestProgress = testProgress
+            };
+
+            return Ok(progress);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving progress for candidate {CandidateId}", candidateId);
+            return StatusCode(500, new { error = "Internal server error" });
+        }
+    }
+
+    /// <summary>
     /// Start a test (changes status from NotStarted to InProgress)
     /// </summary>
     [HttpPost("{testId}/start")]
@@ -323,12 +428,12 @@ public class TestsController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<ActionResult<VideoResponseDto>> UploadVideo(
         Guid testId,
+        [FromQuery] Guid candidateId,
         [FromForm] UploadVideoRequest request)
     {
-        if (testId != request.TestId)
-        {
-            return BadRequest(new { error = "Test ID mismatch" });
-        }
+        // Populate TestId and CandidateId from URL path and query parameters
+        request.TestId = testId;
+        request.CandidateId = candidateId;
 
         if (!IsAuthorizedForCandidate(request.CandidateId))
         {
@@ -339,12 +444,12 @@ public class TestsController : ControllerBase
         {
             var videoResponse = await _videoResponseService.UploadVideoResponseAsync(request);
             return CreatedAtAction(nameof(GetVideoResponse),
-                new { testId, videoId = videoResponse.Id },
+                new { testId, videoId = videoResponse.Id, candidateId },
                 videoResponse);
         }
-        catch (NotFoundException)
+        catch (NotFoundException ex)
         {
-            return NotFound(new { error = $"Test {testId} not found" });
+            return NotFound(new { error = ex.Message });
         }
         catch (UnauthorizedAccessException)
         {
