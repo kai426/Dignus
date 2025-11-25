@@ -51,8 +51,8 @@
 |----|------|------------------|----------------|
 | `1` | Português | Vídeo + Leitura | ❌ (IA/Manual) |
 | `2` | Matemática | Vídeo | ❌ (IA/Manual) |
-| `3` | Psicologia | Múltipla Escolha (49 questões) | ✅ Sim |
-| `4` | Retenção Visual | Múltipla Escolha (15 questões) | ✅ Sim |
+| `3` | Psicologia | Múltipla Escolha (52 questões) | ✅ Sim |
+| `4` | Retenção Visual | Múltipla Escolha (29 questões, 6 opções A-F) | ✅ Sim |
 | `5` | Entrevista | Vídeo (5 questões) | ❌ (IA/Manual) |
 
 ---
@@ -927,10 +927,11 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 ### Características
 
 - **Tipo**: Psicologia (TestType = 3)
-- **Questões**: 49 questões de múltipla escolha
+- **Questões**: 52 questões de múltipla escolha
 - **Correção**: ⚠️ **Não há correção automática** (teste de perfil comportamental, sem respostas certas/erradas)
-- **Tempo Limite**: 60 minutos
-- **Seleção**: ⚠️ **TODAS as 49 questões são entregues em ordem cronológica** (não aleatória)
+- **Tempo Limite**: Sem limite de tempo
+- **Seleção**: ⚠️ **TODAS as 52 questões são entregues em ordem cronológica** (não aleatória)
+- **⚠️ IMPORTANTE**: Durante o teste de Psicologia (seção Diversidade e Inclusão), o candidato responde se é PCD. Use o endpoint de atualização de status PCD para salvar essa informação.
 
 ### Fluxo Completo
 
@@ -939,19 +940,23 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 │           WORKFLOW DE TESTE - PSICOLOGIA                │
 └─────────────────────────────────────────────────────────┘
 
-1. Criar Teste (TODAS as 49 questões em ordem cronológica)
+1. Criar Teste (TODAS as 52 questões em ordem cronológica)
    ↓
-2. Obter Questões (49x múltipla escolha em ordem)
+2. Obter Questões (52x múltipla escolha em ordem)
    ↓
 3. Responder Questões (envio em lote - array direto)
    ↓
-4. Verificar Progresso (endpoint /status)
+4. **Atualizar Status PCD** (quando candidato responde questão 47 - Diversidade e Inclusão)
    ↓
-5. Iniciar Teste (começa timer de 60 min)
+5. **Upload Documento PCD** (se isPCD = true, upload de laudo/certificado)
    ↓
-6. Submeter Teste (com answers: [])
+6. Verificar Progresso (endpoint /status)
    ↓
-7. Teste Finalizado (sem nota - perfil comportamental)
+7. Iniciar Teste (começa timer de 60 min)
+   ↓
+8. Submeter Teste (com answers: [])
+   ↓
+9. Teste Finalizado (sem nota - perfil comportamental)
 ```
 
 ---
@@ -978,17 +983,17 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
   "id": "psych-test-guid",
   "testType": "Psychology",
   "status": "NotStarted",
-  "timeLimitSeconds": 3600,
-  "totalQuestions": 49,
+  "timeLimitSeconds": null,
+  "totalQuestions": 52,
   "questions": [
-    // Array com TODAS as 49 questões em ordem cronológica
+    // Array com TODAS as 52 questões em ordem cronológica
     // (não há seleção aleatória para testes de Psicologia)
   ]
 }
 ```
 
 **⚠️ IMPORTANTE**:
-- O teste de Psicologia entrega **TODAS as 49 questões** disponíveis no banco
+- O teste de Psicologia entrega **TODAS as 52 questões** disponíveis no banco
 - As questões são ordenadas cronologicamente (por `CreatedAt`)
 - **NÃO há seleção aleatória** para este tipo de teste
 
@@ -1007,7 +1012,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/psych-test-guid/start?candidate
 
 ---
 
-### Obter Questões (49 questões)
+### Obter Questões (52 questões)
 
 **⚠️ Nota**: As questões já vêm no response da criação do teste. Este endpoint é opcional para recarregar questões.
 
@@ -1018,7 +1023,7 @@ curl -X GET "http://localhost:5076/api/v2/tests/psych-test-guid?candidateId=0acf
   -H "Authorization: Bearer {accessToken}"
 ```
 
-#### Exemplo de Resposta (amostra de 3 das 49 questões)
+#### Exemplo de Resposta (amostra de 3 das 52 questões)
 
 ```json
 [
@@ -1120,6 +1125,332 @@ curl -X GET "http://localhost:5076/api/v2/tests/psych-test-guid/status?candidate
 
 ---
 
+### Atualizar Status PCD do Candidato
+
+**⚠️ IMPORTANTE**: Este endpoint deve ser chamado quando o candidato responder a Questão 47 do teste de Psicologia (Seção Diversidade e Inclusão): "Você se enquadra como uma Pessoa PCD?"
+
+**Endpoint**: `PATCH /api/Candidate/{candidateId}/pcd`
+
+**Descrição**: Atualiza o status PCD (Pessoa com Deficiência) do candidato.
+
+#### cURL
+
+```bash
+curl -X PATCH "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/pcd" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {accessToken}" \
+  -d '{
+    "isPCD": true
+  }'
+```
+
+#### PowerShell
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/pcd" `
+  -Method Patch `
+  -ContentType "application/json" `
+  -Headers @{Authorization="Bearer {accessToken}"} `
+  -Body '{"isPCD": true}'
+```
+
+#### JavaScript (Axios)
+
+```javascript
+// Quando o candidato responder "Sim" na questão 47
+const updatePCDStatus = async (candidateId, isPCD) => {
+  const response = await axios.patch(
+    `/api/Candidate/${candidateId}/pcd`,
+    {
+      isPCD: isPCD  // true se "Sim", false se "Não"
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    }
+  );
+
+  return response.data;
+};
+
+// Exemplo de uso ao processar a resposta da questão 47
+if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
+  const isPCD = answer === 'A';  // 'A' = Sim, 'B' = Não
+  await updatePCDStatus(candidateId, isPCD);
+}
+```
+
+#### Resposta de Sucesso (200 OK)
+
+```json
+{
+  "id": "0acf8567-0a49-4504-b275-11c346a08a13",
+  "name": "Maria Oliveira Costa",
+  "cpf": "07766468000",
+  "email": "maria.oliveira@example.com",
+  "phone": "11912345678",
+  "birthDate": "1998-07-22T00:00:00Z",
+  "status": "InProcess",
+  "createdAt": "2025-11-10T12:00:00Z",
+  "isPCD": true
+}
+```
+
+#### Possíveis Erros
+
+**404 Not Found** - Candidato não encontrado:
+```json
+{
+  "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
+}
+```
+
+**400 Bad Request** - Request body inválido:
+```json
+{
+  "error": "Request body is required"
+}
+```
+
+**401 Unauthorized** - Token ausente ou inválido:
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "Token de autenticação inválido ou expirado"
+}
+```
+
+#### Quando Chamar Este Endpoint
+
+**Durante o Teste de Psicologia:**
+1. O candidato responde a **Questão 47** (Seção 9: Diversidade e Inclusão)
+2. Questão: "Você se enquadra como uma Pessoa PCD?"
+3. Opções: "Sim" ou "Não"
+4. **Imediatamente após** o candidato selecionar a resposta, chame este endpoint
+5. Envie `isPCD: true` se resposta for "Sim", ou `isPCD: false` se resposta for "Não"
+
+**Fluxo Recomendado:**
+```javascript
+// Ao salvar resposta da questão 47
+const handlePsychologyAnswer = async (question, answer) => {
+  // 1. Salvar resposta normalmente via /api/v2/tests/{testId}/answers
+  await saveAnswer(testId, questionId, answer);
+
+  // 2. Se for a questão 47 (PCD), atualizar status PCD separadamente
+  if (question.id === 'q-47') {
+    const isPCD = answer === 'A';  // A = Sim, B = Não
+    await updatePCDStatus(candidateId, isPCD);
+  }
+};
+```
+
+---
+
+### Upload de Documento Comprobatório PCD
+
+**⚠️ IMPORTANTE**: Este endpoint deve ser chamado quando o candidato informar que é PCD (`isPCD: true`) para fazer upload do documento comprobatório.
+
+**Endpoint**: `POST /api/Candidate/{candidateId}/pcd-document`
+
+**Descrição**: Faz upload do documento comprobatório de PCD (laudo médico, certificado, etc.) para o Azure Blob Storage.
+
+**Content-Type**: `multipart/form-data`
+
+#### Especificações do Arquivo
+
+- **Formatos aceitos**: PDF (`.pdf`) e DOCX (`.docx`)
+- **Tamanho máximo**: 10 MB
+- **MIME Types**: `application/pdf`, `application/vnd.openxmlformats-officedocument.wordprocessingml.document`
+- **Organização no Blob Storage**:
+  - Container: `pcd-documents`
+  - Path: `candidate-{candidateId}/pcd-document-{timestamp}.{ext}`
+
+#### cURL
+
+```bash
+curl -X POST "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/pcd-document" \
+  -H "Authorization: Bearer {accessToken}" \
+  -F "document=@/path/to/laudo_medico.pdf"
+```
+
+#### PowerShell
+
+```powershell
+$form = @{
+    document = Get-Item -Path "C:\Documents\laudo_medico.pdf"
+}
+
+Invoke-RestMethod -Uri "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/pcd-document" `
+  -Method Post `
+  -Headers @{Authorization="Bearer {accessToken}"} `
+  -Form $form
+```
+
+#### JavaScript (Axios)
+
+```javascript
+// Upload de documento PCD
+const uploadPCDDocument = async (candidateId, file) => {
+  const formData = new FormData();
+  formData.append('document', file);
+
+  const response = await axios.post(
+    `/api/Candidate/${candidateId}/pcd-document`,
+    formData,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload: ${percentCompleted}%`);
+      }
+    }
+  );
+
+  return response.data;
+};
+
+// Exemplo de uso com input file
+const handlePCDDocumentUpload = async (event) => {
+  const file = event.target.files[0];
+
+  // Validar tipo de arquivo
+  const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Apenas arquivos PDF e DOCX são permitidos');
+    return;
+  }
+
+  // Validar tamanho (10MB)
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    alert('O arquivo não pode exceder 10MB');
+    return;
+  }
+
+  try {
+    const result = await uploadPCDDocument(candidateId, file);
+    console.log('Documento enviado com sucesso:', result);
+  } catch (error) {
+    console.error('Erro ao enviar documento:', error);
+  }
+};
+```
+
+#### Resposta de Sucesso (200 OK)
+
+```json
+{
+  "id": "0acf8567-0a49-4504-b275-11c346a08a13",
+  "name": "Maria Oliveira Costa",
+  "cpf": "07766468000",
+  "email": "maria.oliveira@example.com",
+  "phone": "11912345678",
+  "birthDate": "1998-07-22T00:00:00Z",
+  "status": "InProcess",
+  "createdAt": "2025-11-10T12:00:00Z",
+  "isPCD": true,
+  "pcdDocumentUrl": "http://127.0.0.1:10000/devstoreaccount1/pcd-documents/candidate-0acf8567-0a49-4504-b275-11c346a08a13/pcd-document-1731595200.pdf",
+  "pcdDocumentFileName": "laudo_medico.pdf",
+  "pcdDocumentUploadedAt": "2025-11-24T15:00:00Z"
+}
+```
+
+#### Possíveis Erros
+
+**400 Bad Request** - Arquivo não fornecido:
+```json
+{
+  "error": "Document file is required"
+}
+```
+
+**400 Bad Request** - Tamanho excedido:
+```json
+{
+  "error": "File size exceeds maximum allowed size of 10MB"
+}
+```
+
+**400 Bad Request** - Formato inválido:
+```json
+{
+  "error": "Invalid file format. Only PDF and DOCX files are allowed"
+}
+```
+
+**400 Bad Request** - MIME type inválido:
+```json
+{
+  "error": "Invalid file type. Only PDF and DOCX files are allowed"
+}
+```
+
+**404 Not Found** - Candidato não encontrado:
+```json
+{
+  "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
+}
+```
+
+#### Quando Chamar Este Endpoint
+
+**Fluxo Recomendado - Durante o Teste de Psicologia:**
+
+```javascript
+// Passo 1: Candidato responde questão 47 (PCD)
+const handlePsychologyAnswer = async (question, answer) => {
+  // Salvar resposta normalmente
+  await saveAnswer(testId, questionId, answer);
+
+  // Se for a questão 47 (PCD)
+  if (question.id === 'q-47') {
+    const isPCD = answer === 'A';  // A = Sim, B = Não
+
+    // Atualizar status PCD
+    await updatePCDStatus(candidateId, isPCD);
+
+    // Se o candidato é PCD, solicitar upload do documento
+    if (isPCD) {
+      // Mostrar modal ou tela de upload
+      showPCDDocumentUploadModal();
+    }
+  }
+};
+
+// Passo 2: Upload do documento
+const showPCDDocumentUploadModal = () => {
+  // Renderizar componente de upload
+  return (
+    <div>
+      <h3>Upload de Documento Comprobatório PCD</h3>
+      <p>Por favor, envie seu laudo médico ou certificado que comprove sua condição de PCD.</p>
+      <p><strong>Formatos aceitos:</strong> PDF, DOCX (máximo 10MB)</p>
+      <input
+        type="file"
+        accept=".pdf,.docx"
+        onChange={handlePCDDocumentUpload}
+      />
+    </div>
+  );
+};
+```
+
+**Importante**:
+- O documento deve ser enviado **imediatamente após** o candidato informar que é PCD
+- O upload é **obrigatório** para candidatos PCD
+- O documento será armazenado de forma segura no Azure Blob Storage
+- O candidato pode fazer um novo upload para substituir um documento anterior (o blob é sobrescrito)
+
+---
+
 ### Submeter Teste de Psicologia
 
 **⚠️ IMPORTANTE**: Para testes de Psicologia, o array `answers` deve estar **vazio** `[]` porque as respostas já foram enviadas via endpoint `/answers`.
@@ -1166,10 +1497,10 @@ curl -X POST "http://localhost:5076/api/v2/tests/psych-test-guid/submit" \
 ### Características
 
 - **Tipo**: Retenção Visual (TestType = 4)
-- **Questões**: 15 questões de múltipla escolha (aleatórias)
+- **Questões**: 29 questões de múltipla escolha (6 opções: A-F)
 - **Correção**: ✅ **Automática**
-- **Tempo Limite**: 20 minutos
-- **Foco**: Memória visual, padrões, sequências
+- **Tempo Limite**: Sem limite de tempo
+- **Foco**: Memória visual, padrões, sequências, reconhecimento espacial
 
 ### Criar Teste de Retenção Visual
 
@@ -1193,17 +1524,17 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
   "id": "visual-test-guid",
   "testType": "VisualRetention",
   "status": "NotStarted",
-  "timeLimitSeconds": 1200,
-  "totalQuestions": 15,
+  "timeLimitSeconds": null,
+  "totalQuestions": 29,
   ...
 }
 ```
 
 **Diferença dos outros testes**:
-- Questões incluem imagens/padrões visuais
-- Timer de apenas 20 minutos
-- Apenas 15 questões
+- 29 questões com 6 opções cada (A-F)
+- Sem limite de tempo
 - Teste de memória e atenção visual
+- Auto-graded (correção automática ao submeter)
 
 *O workflow de resposta e submissão é idêntico ao teste de Psicologia.*
 
@@ -1214,12 +1545,47 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 ### Características
 
 - **Tipo**: Entrevista (TestType = 5)
-- **Questões**: 5 vídeos comportamentais
+- **Questões**: 5 vídeos comportamentais (gerados automaticamente)
 - **Correção**: Manual/IA
-- **Tempo Limite**: Sem limite
+- **Tempo Limite**: Sem limite total (sugestão: 180s por questão)
 - **Foco**: Comportamento, experiência, soft skills
+- **Tamanho Máximo do Vídeo**: 500 MB por vídeo
+- **Formatos Aceitos**: `.mp4`, `.mov`, `.avi`, `.wmv`
+- **MIME Types**: `video/mp4`, `video/quicktime`, `video/x-msvideo`, `video/x-ms-wmv`
 
-### Criar Teste de Entrevista
+### Fluxo Completo
+
+```
+┌─────────────────────────────────────────────────────────┐
+│           WORKFLOW DE TESTE - ENTREVISTA                │
+└─────────────────────────────────────────────────────────┘
+
+1. Criar Teste de Entrevista (5 questões geradas)
+   ↓
+2. Iniciar Teste
+   ↓
+3. Obter Questões (5x vídeo comportamental)
+   ↓
+4. Upload de Vídeo para Questão 1
+   ↓
+5. Upload de Vídeo para Questão 2
+   ↓
+6. Upload de Vídeo para Questão 3
+   ↓
+7. Upload de Vídeo para Questão 4
+   ↓
+8. Upload de Vídeo para Questão 5
+   ↓
+9. Submeter Teste (com answers: [])
+   ↓
+10. Aguardar Avaliação da IA/Recrutador
+```
+
+---
+
+### Passo 1: Criar Teste de Entrevista
+
+**Endpoint**: `POST /api/v2/tests`
 
 #### cURL
 
@@ -1228,21 +1594,328 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer {accessToken}" \
   -d '{
-    "candidateId": "0acf8567-0a49-4504-b275-11c346a08a13",
-    "testType": 5,
-    "difficultyLevel": null
+    "candidateId": "55205319-c6e9-49ca-bd06-2f323d218f2f",
+    "testType": 5
   }'
 ```
 
-**Exemplo de Questões de Entrevista**:
+#### JavaScript (Axios)
 
-1. **Apresentação**: "Fale sobre você, sua formação e experiência profissional."
-2. **Situação de Pressão**: "Descreva uma situação em que você teve que trabalhar sob pressão. Como lidou?"
-3. **Resolução de Conflitos**: "Conte sobre um conflito com um colega de trabalho e como foi resolvido."
-4. **Conquistas**: "Qual foi sua maior conquista profissional? Por quê?"
-5. **Objetivos**: "Onde você se vê daqui a 5 anos? Quais são seus objetivos?"
+```javascript
+const response = await axios.post('/api/v2/tests', {
+  candidateId: candidateId,
+  testType: 5  // Interview
+}, {
+  headers: {
+    'Authorization': `Bearer ${accessToken}`
+  }
+});
 
-*O workflow é idêntico ao teste de Português (5 uploads de vídeo + submissão).*
+const testId = response.data.id;
+const questions = response.data.questions; // 5 questões já vêm no response
+```
+
+#### Resposta de Sucesso (201 Created)
+
+```json
+{
+  "id": "f55dbdc2-adab-4edb-8490-44a3156c94c2",
+  "testType": "Interview",
+  "candidateId": "55205319-c6e9-49ca-bd06-2f323d218f2f",
+  "status": "NotStarted",
+  "questions": [
+    {
+      "id": "04bb670f-c9d3-451a-afdb-252498cd9a2b",
+      "questionText": "Conte-me sobre você: sua formação acadêmica, experiência profissional e o que o motiva nesta candidatura.",
+      "questionOrder": 1,
+      "pointValue": 1.00,
+      "estimatedTimeSeconds": 180
+    },
+    {
+      "id": "0441df4a-1781-4f8e-a398-c866969d04d6",
+      "questionText": "Descreva uma situação em que você teve que trabalhar sob pressão. Como você lidou com essa situação e qual foi o resultado?",
+      "questionOrder": 2,
+      "pointValue": 1.00,
+      "estimatedTimeSeconds": 180
+    },
+    {
+      "id": "fbf67f96-1d4a-4a97-af27-8fe0996bf211",
+      "questionText": "Conte sobre uma vez em que você teve um conflito com um colega de trabalho. Como você resolveu essa situação?",
+      "questionOrder": 3,
+      "pointValue": 1.00,
+      "estimatedTimeSeconds": 180
+    },
+    {
+      "id": "e7837461-b2f8-4c55-8c08-58899803a574",
+      "questionText": "Qual é a sua maior conquista profissional até o momento? Por que você considera isso uma conquista?",
+      "questionOrder": 4,
+      "pointValue": 1.00,
+      "estimatedTimeSeconds": 180
+    },
+    {
+      "id": "5d39c0a9-b09e-46e7-aadd-a0e16fd8bdc9",
+      "questionText": "Onde você se vê daqui a 5 anos? Quais são seus objetivos de carreira e como esta posição se alinha com esses objetivos?",
+      "questionOrder": 5,
+      "pointValue": 1.00,
+      "estimatedTimeSeconds": 180
+    }
+  ]
+}
+```
+
+---
+
+### Passo 2: Iniciar Teste de Entrevista
+
+**Endpoint**: `POST /api/v2/tests/{testId}/start`
+
+#### cURL
+
+```bash
+curl -X POST "http://localhost:5076/api/v2/tests/{testId}/start?candidateId={candidateId}" \
+  -H "Authorization: Bearer {accessToken}"
+```
+
+#### Resposta (200 OK)
+
+```json
+{
+  "id": "f55dbdc2-adab-4edb-8490-44a3156c94c2",
+  "status": "InProgress",
+  "startedAt": "2025-11-17T13:43:21.755Z",
+  ...
+}
+```
+
+---
+
+### Passo 3: Upload de Vídeo para Cada Questão
+
+**Endpoint**: `POST /api/v2/tests/{testId}/videos?candidateId={candidateId}`
+
+**⚠️ IMPORTANTE - Requisitos do Azure Blob Storage**:
+- Em **desenvolvimento**: Azurite deve estar rodando na porta 10000
+  - Instalar: `npm install -g azurite`
+  - Executar: `azurite-blob --location c:\azurite --debug c:\azurite\debug.log`
+- Em **produção**: Azure Blob Storage configurado
+
+**Content-Type**: `multipart/form-data`
+
+**Form Data**:
+- `questionSnapshotId` (obrigatório): ID da questão
+- `questionNumber` (obrigatório): Número da questão (1-5)
+- `videoFile` (obrigatório): Arquivo de vídeo com MIME type correto
+
+#### cURL - Upload para Questão 1
+
+```bash
+curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId={candidateId}" \
+  -H "Authorization: Bearer {accessToken}" \
+  -F "questionSnapshotId=04bb670f-c9d3-451a-afdb-252498cd9a2b" \
+  -F "questionNumber=1" \
+  -F "videoFile=@/caminho/para/video.mp4;type=video/mp4"
+```
+
+**⚠️ Nota Crítica**: O parâmetro `;type=video/mp4` é **obrigatório** no cURL para especificar o MIME type correto. Sem ele, o arquivo será enviado como `application/octet-stream` e será rejeitado.
+
+#### JavaScript (Axios) - Upload com Progress
+
+```javascript
+// Upload de vídeo para uma questão
+const uploadInterviewVideo = async (questionId, questionNumber, videoBlob) => {
+  const formData = new FormData();
+  formData.append('questionSnapshotId', questionId);
+  formData.append('questionNumber', questionNumber);
+  formData.append('videoFile', videoBlob, 'interview-video.mp4');
+
+  const response = await axios.post(
+    `/api/v2/tests/${testId}/videos?candidateId=${candidateId}`,
+    formData,
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (progressEvent) => {
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
+        console.log(`Upload Q${questionNumber}: ${percentCompleted}%`);
+        // Atualizar UI com progresso
+        updateProgressBar(questionNumber, percentCompleted);
+      }
+    }
+  );
+
+  return response.data;
+};
+
+// Upload de todos os 5 vídeos
+const uploadAllVideos = async (questions, videos) => {
+  for (let i = 0; i < questions.length; i++) {
+    const question = questions[i];
+    const videoBlob = videos[i];
+
+    console.log(`Uploading video for question ${i + 1}...`);
+    const result = await uploadInterviewVideo(
+      question.id,
+      question.questionOrder,
+      videoBlob
+    );
+
+    console.log(`Question ${i + 1} uploaded:`, result.blobUrl);
+  }
+};
+```
+
+#### Resposta de Sucesso (200 OK)
+
+```json
+{
+  "id": "1906d514-5650-4a75-b7c6-b50dfe9ef74b",
+  "questionSnapshotId": "04bb670f-c9d3-451a-afdb-252498cd9a2b",
+  "questionNumber": 1,
+  "responseType": null,
+  "blobUrl": "http://127.0.0.1:10000/devstoreaccount1/test-videos-.../q1_1763387172.mp4",
+  "fileSizeBytes": 6226075,
+  "uploadedAt": "2025-11-17T13:46:12.706Z",
+  "score": null,
+  "feedback": null,
+  "verdict": null,
+  "analyzedAt": null
+}
+```
+
+**Repita o processo para as questões 2, 3, 4 e 5.**
+
+---
+
+### Passo 4: Submeter Teste de Entrevista
+
+**Endpoint**: `POST /api/v2/tests/{testId}/submit`
+
+**⚠️ IMPORTANTE**: Para testes de Entrevista, o array `answers` deve estar **vazio** `[]` porque as respostas já foram enviadas via upload de vídeo.
+
+#### cURL
+
+```bash
+curl -X POST "http://localhost:5076/api/v2/tests/{testId}/submit" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {accessToken}" \
+  -d '{
+    "testId": "f55dbdc2-adab-4edb-8490-44a3156c94c2",
+    "candidateId": "55205319-c6e9-49ca-bd06-2f323d218f2f",
+    "answers": []
+  }'
+```
+
+#### JavaScript (Axios)
+
+```javascript
+const response = await axios.post(
+  `/api/v2/tests/${testId}/submit`,
+  {
+    testId: testId,
+    candidateId: candidateId,
+    answers: []  // Vazio para testes de vídeo
+  },
+  {
+    headers: {
+      'Authorization': `Bearer ${accessToken}`
+    }
+  }
+);
+```
+
+#### Resposta de Sucesso (200 OK)
+
+```json
+{
+  "testId": "f55dbdc2-adab-4edb-8490-44a3156c94c2",
+  "status": "Submitted",
+  "score": 0,
+  "rawScore": 0,
+  "maxPossibleScore": 0,
+  "correctAnswers": 0,
+  "totalQuestions": 5,
+  "durationSeconds": 242,
+  "message": "Test submitted successfully"
+}
+```
+
+**⚠️ Notas Importantes**:
+- Testes de Entrevista **NÃO têm correção automática**
+- O `score` será `0` até a avaliação manual/IA
+- O status final é `Submitted` (aguardando avaliação)
+- As respostas em vídeo são analisadas posteriormente por IA ou recrutador
+
+---
+
+### Verificar Progresso Atualizado
+
+**Endpoint**: `GET /api/v2/tests/candidate/{candidateId}/progress`
+
+#### cURL
+
+```bash
+curl -X GET "http://localhost:5076/api/v2/tests/candidate/{candidateId}/progress" \
+  -H "Authorization: Bearer {accessToken}"
+```
+
+#### Resposta Após Conclusão da Entrevista (200 OK)
+
+```json
+{
+  "candidateId": "55205319-c6e9-49ca-bd06-2f323d218f2f",
+  "completionPercentage": 20.0,
+  "completedTests": 1,
+  "totalTests": 5,
+  "testProgress": {
+    "Interview": {
+      "testType": "Interview",
+      "status": "Submitted",
+      "isCompleted": true,
+      "score": 0.00,
+      "completedAt": "2025-11-17T13:47:24.121258"
+    },
+    "Portuguese": {
+      "status": "InProgress",
+      "isCompleted": false
+    },
+    "Math": {
+      "status": "NotStarted",
+      "isCompleted": false
+    },
+    "Psychology": {
+      "status": "NotStarted",
+      "isCompleted": false
+    },
+    "VisualRetention": {
+      "status": "NotStarted",
+      "isCompleted": false
+    }
+  }
+}
+```
+
+---
+
+### ✅ Workflow Validado com Sucesso
+
+**Teste realizado em**: 2025-11-17
+**Status**: ✅ Todos os endpoints funcionando conforme documentado
+
+**Resultados da Validação**:
+- ✅ Criação de teste com 5 questões automáticas
+- ✅ Início do teste (NotStarted → InProgress)
+- ✅ Upload de 5 vídeos (~6MB cada) com sucesso
+- ✅ Validação de MIME type funcionando
+- ✅ Armazenamento em Azure Blob Storage (Azurite)
+- ✅ Submissão do teste com sucesso
+- ✅ Atualização de progresso (20% completado)
+- ✅ Duração do teste registrada (242 segundos)
+
+**Tempo Total do Workflow**: ~4 minutos (incluindo uploads)
 
 ---
 

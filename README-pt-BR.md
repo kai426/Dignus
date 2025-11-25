@@ -199,8 +199,8 @@ A documentação cobre todos os 11 controladores com **70+ endpoints** incluindo
 | Português       | Grupos de Questões    | 3          | Ordenado (GroupOrder) | ❌ (Agente IA)      |
 | Matemática      | Grupos de Questões    | 2          | Ordenado (GroupOrder) | ❌ (Agente IA)      |
 | Entrevista      | Grupos de Questões    | 5          | Ordenado (GroupOrder) | ❌ (Agente IA)      |
-| Psicologia      | Templates de Questões | 50         | Seleção aleatória     | ✅ Lado do servidor |
-| Retenção Visual | Templates de Questões | 15         | Seleção aleatória     | ✅ Lado do servidor |
+| Psicologia      | Templates de Questões | 52         | Seleção aleatória     | ✅ Lado do servidor |
+| Retenção Visual | Templates de Questões | 29         | Seleção aleatória     | ✅ Lado do servidor |
 
 ---
 
@@ -277,8 +277,8 @@ A documentação cobre todos os 11 controladores com **70+ endpoints** incluindo
 
 - 1: Português (3 questões em vídeo + 1 texto de leitura = 4 vídeos total)
 - 2: Matemática (2 questões em vídeo)
-- 3: Psicologia (50 questões de múltipla escolha)
-- 4: Retenção Visual (15 questões de múltipla escolha)
+- 3: Psicologia (52 questões de múltipla escolha)
+- 4: Retenção Visual (29 questões de múltipla escolha, 6 opções A-F)
 - 5: Entrevista (5 questões em vídeo)
 
 **Status do Teste:**
@@ -335,11 +335,11 @@ A documentação cobre todos os 11 controladores com **70+ endpoints** incluindo
 
 **Fluxo:**
 
-1. Candidato recebe 50 questões selecionadas aleatoriamente
+1. Candidato recebe 52 questões selecionadas aleatoriamente
 2. Responde todas as questões (única ou múltipla escolha por questão)
 3. Submete todas as respostas em um lote
 4. **Correção Automática:** Backend calcula automaticamente a pontuação
-5. **Limite de Tempo:** 60 minutos (3600 segundos)
+5. **Sem limite de tempo**
 
 **Fonte das Questões:** Seleção aleatória do pool de QuestionTemplate ativo
 
@@ -347,11 +347,11 @@ A documentação cobre todos os 11 controladores com **70+ endpoints** incluindo
 
 **Fluxo:**
 
-1. Candidato recebe 15 questões selecionadas aleatoriamente
+1. Candidato recebe 29 questões selecionadas aleatoriamente
 2. Responde todas as questões (única ou múltipla escolha por questão)
 3. Submete todas as respostas em um lote
 4. **Correção Automática:** Backend calcula automaticamente a pontuação
-5. **Limite de Tempo:** 20 minutos (1200 segundos)
+5. **Sem limite de tempo**
 
 **Fonte das Questões:** Seleção aleatória do pool de QuestionTemplate ativo
 
@@ -624,8 +624,8 @@ Todos os endpoints retornam respostas de erro consistentes:
   - **Português:** 3 questões em vídeo + leitura (corrigido por IA)
   - **Matemática:** 2 questões em vídeo (corrigido por IA)
   - **Entrevista:** 5 questões em vídeo (corrigido por IA)
-  - **Psicologia:** 50 questões de múltipla escolha (correção automática)
-  - **Retenção Visual:** 15 questões de múltipla escolha (correção automática)
+  - **Psicologia:** 52 questões de múltipla escolha (correção automática)
+  - **Retenção Visual:** 29 questões de múltipla escolha (correção automática)
 - Análise de vídeo baseada em IA com pontuação, feedback e veredicto
 - Correção automática para testes objetivos
 - Upload seguro de mídia para Azure Blob Storage
@@ -738,7 +738,7 @@ Para questões ou problemas relacionados à API Dignus Candidate:
 
 **Atualizações Recentes:**
 
-- Configurações de teste atualizadas (Português: 3 questões, Matemática: 2 questões, Entrevista: 5 questões, Psicologia: 50 questões)
+- Configurações de teste atualizadas (Português: 3 questões, Matemática: 2 questões, Entrevista: 5 questões, Psicologia: 52 questões, Retenção Visual: 29 questões)
 - Documentação abrangente de fluxo de trabalho de teste adicionada para todos os 5 tipos de teste
 - Integração com agente IA externo documentada para testes baseados em vídeo
 - Documentação de gerenciamento de questões atualizada com diretrizes de uso

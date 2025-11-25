@@ -184,8 +184,8 @@ The documentation covers all 11 controllers with **70+ endpoints** including:
 | Portuguese | Question Groups | 3 | Ordered (GroupOrder) | ❌ (AI Agent) |
 | Math | Question Groups | 2 | Ordered (GroupOrder) | ❌ (AI Agent) |
 | Interview | Question Groups | 5 | Ordered (GroupOrder) | ❌ (AI Agent) |
-| Psychology | Question Templates | 50 | Random selection | ✅ Server-side |
-| Visual Retention | Question Templates | 15 | Random selection | ✅ Server-side |
+| Psychology | Question Templates | 52 | Random selection | ✅ Server-side |
+| Visual Retention | Question Templates | 29 | Random selection | ✅ Server-side |
 
 ---
 
@@ -261,8 +261,8 @@ The documentation covers all 11 controllers with **70+ endpoints** including:
 **Test Types:**
 - 1: Portuguese (3 video questions + 1 reading text = 4 videos total)
 - 2: Math (2 video questions)
-- 3: Psychology (50 multiple choice questions)
-- 4: VisualRetention (15 multiple choice questions)
+- 3: Psychology (52 multiple choice questions)
+- 4: VisualRetention (29 multiple choice questions, 6 options A-F)
 - 5: Interview (5 video questions)
 
 **Test Status:**
@@ -310,21 +310,21 @@ The documentation covers all 11 controllers with **70+ endpoints** including:
 
 ##### Psychology Test (Multiple Choice)
 **Flow:**
-1. Candidate receives 50 randomly selected questions
+1. Candidate receives 52 randomly selected questions
 2. Answers all questions (single or multiple choice per question)
 3. Submits all answers in one batch
 4. **Auto-graded:** Backend automatically calculates score
-5. **Time Limit:** 60 minutes (3600 seconds)
+5. **No time limit**
 
 **Question Source:** Random selection from active QuestionTemplate pool
 
 ##### Visual Retention Test (Multiple Choice)
 **Flow:**
-1. Candidate receives 15 randomly selected questions
+1. Candidate receives 29 randomly selected questions
 2. Answers all questions (single or multiple choice per question)
 3. Submits all answers in one batch
 4. **Auto-graded:** Backend automatically calculates score
-5. **Time Limit:** 20 minutes (1200 seconds)
+5. **No time limit**
 
 **Question Source:** Random selection from active QuestionTemplate pool
 

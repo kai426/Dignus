@@ -315,7 +315,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseCors("DignusPolicy");
 
@@ -472,6 +472,13 @@ static async Task SeedQuestionGroupsAsync(DignusContextNew context, ILogger<Prog
         var psychologySeeder = new Dignus.Data.Seeders.PsychologyQuestionSeeder(context, psychologySeederLogger);
         await psychologySeeder.SeedAsync();
         logger.LogInformation("Psychology question seeding completed.");
+
+        // Seed Visual Retention questions
+        logger.LogInformation("Running Visual Retention question seeder...");
+        var visualRetentionSeederLogger = loggerFactory.CreateLogger<Dignus.Data.Seeders.VisualRetentionQuestionSeeder>();
+        var visualRetentionSeeder = new Dignus.Data.Seeders.VisualRetentionQuestionSeeder(context, visualRetentionSeederLogger);
+        await visualRetentionSeeder.SeedAsync();
+        logger.LogInformation("Visual Retention question seeding completed.");
     }
     catch (Exception ex)
     {

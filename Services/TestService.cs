@@ -34,15 +34,15 @@ public class TestService : ITestService
         { TestType.Math, 2 },            // 2 video questions
         { TestType.Interview, 5 },       // 5 video interview questions
         { TestType.Psychology, 52 },     // 52 personality assessment questions - all delivered in order
-        { TestType.VisualRetention, 15 }
+        { TestType.VisualRetention, 29 } // 29 visual retention questions
     };
 
     private static readonly Dictionary<TestType, int?> TimeLimitsSeconds = new()
     {
         { TestType.Portuguese, null }, // No time limit (video-based)
         { TestType.Math, null },       // No time limit (video-based)
-        { TestType.Psychology, 3600 }, // 60 minutes
-        { TestType.VisualRetention, 1200 } // 20 minutes
+        { TestType.Psychology, null }, // No time limit
+        { TestType.VisualRetention, null } // No time limit
     };
 
     public TestService(
