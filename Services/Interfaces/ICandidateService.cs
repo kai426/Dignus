@@ -93,5 +93,14 @@ namespace Dignus.Candidate.Back.Services.Interfaces
         /// <param name="candidateId">The candidate's unique identifier</param>
         /// <returns>Job information DTO if found, null otherwise</returns>
         Task<CandidateJobDto?> GetCandidateJobAsync(Guid candidateId);
+
+        /// <summary>
+        /// Updates candidate PCD document information
+        /// </summary>
+        /// <param name="candidateId">The candidate's unique identifier</param>
+        /// <param name="documentUrl">The blob storage URL of the uploaded document</param>
+        /// <param name="fileName">The original filename of the document</param>
+        /// <returns>The updated candidate DTO if successful, null if candidate not found</returns>
+        Task<CandidateDto?> UpdateCandidateDocumentAsync(Guid candidateId, string documentUrl, string fileName);
     }
 }

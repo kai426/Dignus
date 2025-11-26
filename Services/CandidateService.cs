@@ -154,6 +154,26 @@ namespace Dignus.Candidate.Back.Services
                     candidate.Status = updateCandidateDto.Status.Value;
                 }
 
+                if (updateCandidateDto.IsPCD.HasValue)
+                {
+                    candidate.IsPCD = updateCandidateDto.IsPCD.Value;
+                }
+
+                if (updateCandidateDto.IsForeigner.HasValue)
+                {
+                    candidate.IsForeigner = updateCandidateDto.IsForeigner.Value;
+                }
+
+                if (!string.IsNullOrEmpty(updateCandidateDto.CountryOfOrigin))
+                {
+                    candidate.CountryOfOrigin = updateCandidateDto.CountryOfOrigin;
+                }
+                else if (updateCandidateDto.IsForeigner == false)
+                {
+                    // Clear country of origin when marking as not foreigner
+                    candidate.CountryOfOrigin = null;
+                }
+
                 _unitOfWork.Candidates.Update(candidate);
                 await _unitOfWork.SaveChangesAsync();
 
@@ -315,6 +335,34 @@ namespace Dignus.Candidate.Back.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving job for candidate {CandidateId}", candidateId);
+                throw;
+            }
+        }
+
+        public async Task<CandidateDto?> UpdateCandidateDocumentAsync(Guid candidateId, string documentUrl, string fileName)
+        {
+            try
+            {
+                var candidate = await _unitOfWork.Candidates.GetByIdAsync(candidateId);
+                if (candidate == null)
+                {
+                    return null;
+                }
+
+                candidate.PCDDocumentUrl = documentUrl;
+                candidate.PCDDocumentFileName = fileName;
+                candidate.PCDDocumentUploadedAt = DateTimeOffset.UtcNow;
+
+                _unitOfWork.Candidates.Update(candidate);
+                await _unitOfWork.SaveChangesAsync();
+
+                _logger.LogInformation("Updated PCD document for candidate with ID {CandidateId}", candidateId);
+
+                return _mapper.Map<CandidateDto>(candidate);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating PCD document for candidate with ID {CandidateId}", candidateId);
                 throw;
             }
         }

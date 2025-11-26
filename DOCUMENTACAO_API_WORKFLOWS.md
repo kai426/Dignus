@@ -14,6 +14,9 @@
 5. [Workflow de Testes - Português](#workflow-de-testes---português)
 6. [Workflow de Testes - Matemática](#workflow-de-testes---matemática)
 7. [Workflow de Testes - Psicologia](#workflow-de-testes---psicologia)
+   - [Atualizar Status PCD](#atualizar-status-pcd-do-candidato)
+   - [Upload Documento PCD](#upload-de-documento-comprobatório-pcd)
+   - [Atualizar Status Estrangeiro](#atualizar-status-de-estrangeiro-foreigner-do-candidato)
 8. [Workflow de Testes - Retenção Visual](#workflow-de-testes---retenção-visual)
 9. [Workflow de Testes - Entrevista](#workflow-de-testes---entrevista)
 10. [Tratamento de Erros](#tratamento-de-erros)
@@ -1234,7 +1237,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 
 **Fluxo Recomendado:**
 ```javascript
-// Ao salvar resposta da questão 47
+// Ao salvar resposta da questão 47 (PCD)
 const handlePsychologyAnswer = async (question, answer) => {
   // 1. Salvar resposta normalmente via /api/v2/tests/{testId}/answers
   await saveAnswer(testId, questionId, answer);
@@ -1246,6 +1249,160 @@ const handlePsychologyAnswer = async (question, answer) => {
   }
 };
 ```
+
+---
+
+### Atualizar Status de Estrangeiro (Foreigner) do Candidato
+
+**⚠️ IMPORTANTE**: Este endpoint deve ser chamado quando o candidato responder a questão sobre ser estrangeiro no teste de Psicologia (Seção Diversidade e Inclusão).
+
+**Endpoint**: `PATCH /api/Candidate/{candidateId}/foreigner`
+
+**Descrição**: Atualiza o status de estrangeiro do candidato e o país de origem.
+
+#### cURL
+
+```bash
+curl -X PATCH "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/foreigner" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {accessToken}" \
+  -d '{
+    "isForeigner": true,
+    "countryOfOrigin": "Argentina"
+  }'
+```
+
+#### PowerShell
+
+```powershell
+Invoke-RestMethod -Uri "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b275-11c346a08a13/foreigner" `
+  -Method Patch `
+  -ContentType "application/json" `
+  -Headers @{Authorization="Bearer {accessToken}"} `
+  -Body '{
+    "isForeigner": true,
+    "countryOfOrigin": "Argentina"
+  }'
+```
+
+#### JavaScript (Axios)
+
+```javascript
+// Quando o candidato responder sobre ser estrangeiro
+const updateForeignerStatus = async (candidateId, isForeigner, countryOfOrigin) => {
+  const response = await axios.patch(
+    `/api/Candidate/${candidateId}/foreigner`,
+    {
+      isForeigner: isForeigner,
+      countryOfOrigin: isForeigner ? countryOfOrigin : null
+    },
+    {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    }
+  );
+
+  return response.data;
+};
+
+// Exemplo de uso ao processar a resposta sobre ser estrangeiro
+if (question.text.includes('estrangeiro')) {
+  const isForeigner = answer === 'A';  // 'A' = Sim, 'B' = Não
+  const country = isForeigner ? await showCountrySelector() : null;
+  await updateForeignerStatus(candidateId, isForeigner, country);
+}
+```
+
+#### Resposta de Sucesso (200 OK)
+
+```json
+{
+  "id": "0acf8567-0a49-4504-b275-11c346a08a13",
+  "name": "Maria Oliveira Costa",
+  "cpf": "07766468000",
+  "email": "maria.oliveira@example.com",
+  "phone": "11912345678",
+  "birthDate": "1998-07-22T00:00:00Z",
+  "status": "InProcess",
+  "createdAt": "2025-11-10T12:00:00Z",
+  "isForeigner": true,
+  "countryOfOrigin": "Argentina"
+}
+```
+
+#### Possíveis Erros
+
+**400 Bad Request** - Request body inválido:
+```json
+{
+  "error": "Request body is required"
+}
+```
+
+**400 Bad Request** - País de origem não informado quando estrangeiro:
+```json
+{
+  "error": "CountryOfOrigin is required when IsForeigner is true"
+}
+```
+
+**404 Not Found** - Candidato não encontrado:
+```json
+{
+  "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
+}
+```
+
+**401 Unauthorized** - Token ausente ou inválido:
+```json
+{
+  "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
+  "title": "Unauthorized",
+  "status": 401,
+  "detail": "Token de autenticação inválido ou expirado"
+}
+```
+
+#### Quando Chamar Este Endpoint
+
+**Durante o Teste de Psicologia:**
+1. O candidato responde à questão sobre ser estrangeiro (Seção 9: Diversidade e Inclusão)
+2. Questão: "Você é estrangeiro?" ou similar
+3. Opções: "Sim" ou "Não"
+4. Se "Sim", solicitar o país de origem
+5. **Imediatamente após** o candidato informar, chame este endpoint
+6. Envie `isForeigner: true` e `countryOfOrigin` se resposta for "Sim"
+7. Envie `isForeigner: false` se resposta for "Não" (countryOfOrigin será limpo automaticamente)
+
+**Fluxo Recomendado:**
+```javascript
+// Ao salvar resposta sobre ser estrangeiro
+const handleForeignerQuestion = async (question, answer) => {
+  // 1. Salvar resposta normalmente via /api/v2/tests/{testId}/answers
+  await saveAnswer(testId, questionId, answer);
+
+  // 2. Se a resposta for sobre ser estrangeiro
+  const isForeigner = answer === 'A';  // A = Sim, B = Não
+
+  if (isForeigner) {
+    // 3. Mostrar seletor de país
+    const country = await showCountrySelector();
+
+    // 4. Atualizar status de estrangeiro com país
+    await updateForeignerStatus(candidateId, true, country);
+  } else {
+    // 5. Atualizar status como não estrangeiro
+    await updateForeignerStatus(candidateId, false, null);
+  }
+};
+```
+
+**Importante**:
+- O campo `countryOfOrigin` é **obrigatório** quando `isForeigner` é `true`
+- O campo `countryOfOrigin` aceita código ISO 3166-1 alpha-2 (ex: "AR", "US", "CO") ou nome completo do país
+- Tamanho máximo: 100 caracteres
+- Quando `isForeigner` é `false`, o `countryOfOrigin` é automaticamente limpo no banco de dados
 
 ---
 

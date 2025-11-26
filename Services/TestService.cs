@@ -434,9 +434,9 @@ public class TestService : ITestService
         // Traditional template-based tests (Psychology, VisualRetention)
         List<QuestionTemplate> templates;
 
-        // Psychology tests use ALL questions in order (not random selection)
+        // Psychology and VisualRetention tests use ALL questions in order (not random selection)
         // IMPORTANT: Ignore difficulty level - deliver ALL questions regardless of difficulty
-        if (test.TestType == TestType.Psychology)
+        if (test.TestType == TestType.Psychology || test.TestType == TestType.VisualRetention)
         {
             templates = await _questionTemplateRepo.GetAllQuestionsOrderedAsync(
                 test.TestType,
@@ -445,12 +445,12 @@ public class TestService : ITestService
             if (templates.Count == 0)
             {
                 throw new InvalidOperationException(
-                    $"No Psychology questions available in database. Please ensure questions are seeded.");
+                    $"No {test.TestType} questions available in database. Please ensure questions are seeded.");
             }
 
             _logger.LogInformation(
-                "Selected ALL {Count} Psychology questions in original order for test {TestId} (ignoring difficulty filter)",
-                templates.Count, test.Id);
+                "Selected ALL {Count} {TestType} questions in original order for test {TestId} (ignoring difficulty filter)",
+                templates.Count, test.TestType, test.Id);
         }
         else
         {

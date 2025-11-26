@@ -29,8 +29,21 @@ namespace Dignus.Candidate.Back.DTOs
         public DateTime BirthDate { get; set; }
         
         public CandidateStatus Status { get; set; }
-        
+
         public DateTimeOffset CreatedAt { get; set; }
+
+        public bool? IsPCD { get; set; }
+
+        public string? PCDDocumentUrl { get; set; }
+
+        public string? PCDDocumentFileName { get; set; }
+
+        public DateTimeOffset? PCDDocumentUploadedAt { get; set; }
+
+        public bool? IsForeigner { get; set; }
+
+        [StringLength(100)]
+        public string? CountryOfOrigin { get; set; }
     }
 
     /// <summary>
@@ -67,7 +80,14 @@ namespace Dignus.Candidate.Back.DTOs
         
         [Phone]
         public string? Phone { get; set; }
-        
+
         public CandidateStatus? Status { get; set; }
+
+        public bool? IsPCD { get; set; }
+
+        public bool? IsForeigner { get; set; }
+
+        [StringLength(100)]
+        public string? CountryOfOrigin { get; set; }
     }
 }
