@@ -38,25 +38,25 @@
 
 ### Candidato de Teste
 
-| Campo | Valor |
-|-------|-------|
-| **Nome** | Maria Oliveira Costa |
-| **CPF** | `07766468000` |
-| **Email** | `maria.oliveira@example.com` |
-| **Telefone** | `11912345678` |
-| **Data Nascimento** | `1998-07-22` |
-| **CandidateId** | `0acf8567-0a49-4504-b275-11c346a08a13` |
-| **Status** | InProcess |
+| Campo               | Valor                                  |
+| ------------------- | -------------------------------------- |
+| **Nome**            | Maria Oliveira Costa                   |
+| **CPF**             | `07766468000`                          |
+| **Email**           | `maria.oliveira@example.com`           |
+| **Telefone**        | `11912345678`                          |
+| **Data Nascimento** | `1998-07-22`                           |
+| **CandidateId**     | `0acf8567-0a49-4504-b275-11c346a08a13` |
+| **Status**          | InProcess                              |
 
 ### Tipos de Teste
 
-| ID | Nome | Tipo de Questões | Auto-corrigido |
-|----|------|------------------|----------------|
-| `1` | Português | Vídeo + Leitura | ❌ (IA/Manual) |
-| `2` | Matemática | Vídeo | ❌ (IA/Manual) |
-| `3` | Psicologia | Múltipla Escolha (52 questões) | ✅ Sim |
-| `4` | Retenção Visual | Múltipla Escolha (29 questões, 6 opções A-F) | ✅ Sim |
-| `5` | Entrevista | Vídeo (5 questões) | ❌ (IA/Manual) |
+| ID  | Nome            | Tipo de Questões                             | Auto-corrigido |
+| --- | --------------- | -------------------------------------------- | -------------- |
+| `1` | Português       | Vídeo + Leitura                              | ❌ (IA/Manual) |
+| `2` | Matemática      | Vídeo                                        | ❌ (IA/Manual) |
+| `3` | Psicologia      | Múltipla Escolha (52 questões)               | ✅ Sim         |
+| `4` | Retenção Visual | Múltipla Escolha (29 questões, 6 opções A-F) | ✅ Sim         |
+| `5` | Entrevista      | Vídeo (5 questões)                           | ❌ (IA/Manual) |
 
 ---
 
@@ -112,9 +112,9 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/candidate-auth/request-token" 
 #### JavaScript (Axios)
 
 ```javascript
-const response = await axios.post('/api/candidate-auth/request-token', {
-  CPF: '07766468000',
-  Email: 'maria.oliveira@example.com'
+const response = await axios.post("/api/candidate-auth/request-token", {
+  CPF: "07766468000",
+  Email: "maria.oliveira@example.com",
 });
 ```
 
@@ -130,6 +130,7 @@ const response = await axios.post('/api/candidate-auth/request-token', {
 #### Possíveis Erros
 
 **404 Not Found** - Candidato não encontrado:
+
 ```json
 {
   "error": "CANDIDATE_NOT_FOUND",
@@ -138,6 +139,7 @@ const response = await axios.post('/api/candidate-auth/request-token', {
 ```
 
 **400 Bad Request** - Conta bloqueada:
+
 ```json
 {
   "error": "ACCOUNT_LOCKED",
@@ -200,15 +202,15 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/candidate-auth/validate-token"
 #### JavaScript (Axios)
 
 ```javascript
-const response = await axios.post('/api/candidate-auth/validate-token', {
-  CPF: '07766468000',
-  TokenCode: '294595'
+const response = await axios.post("/api/candidate-auth/validate-token", {
+  CPF: "07766468000",
+  TokenCode: "294595",
 });
 
 // Armazenar tokens
-localStorage.setItem('accessToken', response.data.accessToken);
-localStorage.setItem('refreshToken', response.data.refreshToken);
-localStorage.setItem('candidateId', response.data.candidateId);
+localStorage.setItem("accessToken", response.data.accessToken);
+localStorage.setItem("refreshToken", response.data.refreshToken);
+localStorage.setItem("candidateId", response.data.candidateId);
 ```
 
 #### Resposta de Sucesso (200 OK)
@@ -224,6 +226,7 @@ localStorage.setItem('candidateId', response.data.candidateId);
 ```
 
 **Campos Importantes**:
+
 - `accessToken`: Use em todas as requisições protegidas
 - `requiresLGPDConsent`: Se `true`, redirecionar para tela de consentimento
 - `candidateId`: ID único do candidato
@@ -231,6 +234,7 @@ localStorage.setItem('candidateId', response.data.candidateId);
 #### Possíveis Erros
 
 **400 Bad Request** - Token inválido ou expirado:
+
 ```json
 {
   "error": "INVALID_TOKEN",
@@ -239,6 +243,7 @@ localStorage.setItem('candidateId', response.data.candidateId);
 ```
 
 **400 Bad Request** - Email não corresponde:
+
 ```json
 {
   "error": "EMAIL_MISMATCH",
@@ -315,7 +320,7 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/consent/status/07766468000" `
 const response = await axios.get(`/api/consent/status/${cpf}`);
 if (!response.data.hasAccepted) {
   // Redirecionar para página de consentimento
-  router.push('/consent');
+  router.push("/consent");
 }
 ```
 
@@ -389,11 +394,11 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/consent" `
 #### JavaScript (Axios)
 
 ```javascript
-const response = await axios.post('/api/consent', {
+const response = await axios.post("/api/consent", {
   CPF: cpf,
   AcceptPrivacyPolicy: true,
   AcceptDataSharing: true,
-  AcceptCreditAnalysis: true
+  AcceptCreditAnalysis: true,
 });
 ```
 
@@ -408,11 +413,11 @@ const response = await axios.post('/api/consent', {
 
 #### Consentimentos Obrigatórios
 
-| Campo | Descrição | Obrigatório |
-|-------|-----------|-------------|
-| `AcceptPrivacyPolicy` | Aceita política de privacidade | ✅ Sim |
-| `AcceptDataSharing` | Aceita compartilhamento de dados | ✅ Sim |
-| `AcceptCreditAnalysis` | Aceita análise de crédito | ✅ Sim |
+| Campo                  | Descrição                        | Obrigatório |
+| ---------------------- | -------------------------------- | ----------- |
+| `AcceptPrivacyPolicy`  | Aceita política de privacidade   | ✅ Sim      |
+| `AcceptDataSharing`    | Aceita compartilhamento de dados | ✅ Sim      |
+| `AcceptCreditAnalysis` | Aceita análise de crédito        | ✅ Sim      |
 
 ---
 
@@ -470,15 +475,19 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 #### JavaScript (Axios)
 
 ```javascript
-const response = await axios.post('/api/v2/tests', {
-  candidateId: candidateId,
-  testType: 1, // Português
-  difficultyLevel: 'medium'
-}, {
-  headers: {
-    'Authorization': `Bearer ${accessToken}`
+const response = await axios.post(
+  "/api/v2/tests",
+  {
+    candidateId: candidateId,
+    testType: 1, // Português
+    difficultyLevel: "medium",
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   }
-});
+);
 
 const testId = response.data.id;
 ```
@@ -595,9 +604,11 @@ curl -X GET "http://localhost:5076/api/v2/tests/{testId}/questions?candidateId=0
 **Content-Type**: `multipart/form-data`
 
 **Query Parameters**:
+
 - `candidateId` (obrigatório): ID do candidato
 
 **Form Data**:
+
 - `questionSnapshotId` (opcional): ID da questão sendo respondida
 - `videoFile` (obrigatório): Arquivo de vídeo
 - `questionNumber` (opcional, recomendado): Número da questão (1-100). Se não fornecido, será derivado automaticamente do `questionSnapshotId` via consulta ao banco de dados. **Recomendação**: Enviar o valor de `questionOrder` recebido ao obter as questões para melhor performance.
@@ -608,6 +619,7 @@ curl -X GET "http://localhost:5076/api/v2/tests/{testId}/questions?candidateId=0
 **⚠️ IMPORTANTE - Testes de Português: 2 Tipos de Upload de Vídeo**
 
 Os testes de Português possuem **4 vídeos no total**:
+
 - **3 vídeos para questões** (COM `questionSnapshotId`)
 - **1 vídeo para leitura do texto** (SEM `questionSnapshotId`)
 
@@ -620,6 +632,7 @@ Os testes de Português possuem **4 vídeos no total**:
 - ✅ **DEVE** incluir `questionNumber` = 1, 2 ou 3
 
 **Exemplo cURL - Questão 1:**
+
 ```bash
 curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId={candidateId}" \
   -H "Authorization: Bearer {accessToken}" \
@@ -638,6 +651,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId={ca
 - ✅ **DEVE** incluir `questionNumber = 4` (ou próximo número sequencial)
 
 **Exemplo cURL - Leitura:**
+
 ```bash
 curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId={candidateId}" \
   -H "Authorization: Bearer {accessToken}" \
@@ -662,27 +676,30 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId=0ac
 #### JavaScript (Axios com FormData)
 
 **Para Questões (3x) - COM questionSnapshotId:**
+
 ```javascript
 // Upload de vídeo para uma questão (questões 1, 2, 3)
 const uploadQuestionVideo = async (question, videoBlob) => {
   const formData = new FormData();
-  formData.append('questionSnapshotId', question.id);  // ✅ Incluir para questões
-  formData.append('questionNumber', question.questionOrder);
-  formData.append('responseType', '2');  // QuestionAnswer
-  formData.append('videoFile', videoBlob, 'questao.mp4');
+  formData.append("questionSnapshotId", question.id); // ✅ Incluir para questões
+  formData.append("questionNumber", question.questionOrder);
+  formData.append("responseType", "2"); // QuestionAnswer
+  formData.append("videoFile", videoBlob, "questao.mp4");
 
   const response = await axios.post(
     `/api/v2/tests/${testId}/videos?candidateId=${candidateId}`,
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
         console.log(`Upload: ${percentCompleted}%`);
-      }
+      },
     }
   );
 
@@ -691,27 +708,30 @@ const uploadQuestionVideo = async (question, videoBlob) => {
 ```
 
 **Para Leitura do Texto (1x) - SEM questionSnapshotId:**
+
 ```javascript
 // Upload de vídeo para leitura do texto
 const uploadReadingVideo = async (videoBlob) => {
   const formData = new FormData();
   // ❌ NÃO incluir questionSnapshotId para leitura!
-  formData.append('questionNumber', '4');
-  formData.append('responseType', '1');  // Reading
-  formData.append('videoFile', videoBlob, 'leitura.mp4');
+  formData.append("questionNumber", "4");
+  formData.append("responseType", "1"); // Reading
+  formData.append("videoFile", videoBlob, "leitura.mp4");
 
   const response = await axios.post(
     `/api/v2/tests/${testId}/videos?candidateId=${candidateId}`,
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
-        const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        const percentCompleted = Math.round(
+          (progressEvent.loaded * 100) / progressEvent.total
+        );
         console.log(`Upload leitura: ${percentCompleted}%`);
-      }
+      },
     }
   );
 
@@ -738,6 +758,7 @@ const uploadReadingVideo = async (videoBlob) => {
 ```
 
 **Restrições**:
+
 - Tamanho máximo: 500 MB
 - Formatos aceitos: `.mp4`, `.mov`, `.avi`, `.wmv`
 - MIME types: `video/mp4`, `video/quicktime`, `video/x-msvideo`, `video/x-ms-wmv`
@@ -749,6 +770,7 @@ const uploadReadingVideo = async (videoBlob) => {
 **Endpoint**: `POST /api/v2/tests/{testId}/answers?candidateId={candidateId}`
 
 **Query Parameters**:
+
 - `candidateId` (obrigatório): ID do candidato
 
 **Request Body**: Array de respostas (não wrapper object)
@@ -775,15 +797,15 @@ const response = await axios.post(
   `/api/v2/tests/${testId}/answers?candidateId=${candidateId}`,
   [
     {
-      questionSnapshotId: 'question-snapshot-guid-4',
-      selectedAnswers: ['A'],
-      responseTimeMs: 5000
-    }
+      questionSnapshotId: "question-snapshot-guid-4",
+      selectedAnswers: ["A"],
+      responseTimeMs: 5000,
+    },
   ],
   {
     headers: {
-      'Authorization': `Bearer ${accessToken}`
-    }
+      Authorization: `Bearer ${accessToken}`,
+    },
   }
 );
 ```
@@ -826,6 +848,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/submit" \
 ```
 
 **Nota Importante sobre o campo `answers`**:
+
 - Para testes de múltipla escolha (Psicologia, Retenção Visual), o array `answers` deve conter as respostas das questões
 - Para testes baseados em vídeo (Português, Matemática, Entrevista), o array `answers` deve estar **vazio** `[]`, pois as respostas já foram enviadas via upload de vídeo no endpoint `/api/v2/tests/{testId}/videos`
 
@@ -921,7 +944,7 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 
 2. **Vídeo 2** - "Três máquinas produzem 450 unidades em 6 horas. Quantas máquinas são necessárias para produzir 750 unidades em 5 horas? Resolva em vídeo mostrando os cálculos."
 
-*O restante do workflow é idêntico ao teste de Português (upload de vídeos + submissão).*
+_O restante do workflow é idêntico ao teste de Português (upload de vídeos + submissão)._
 
 ---
 
@@ -996,6 +1019,7 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 ```
 
 **⚠️ IMPORTANTE**:
+
 - O teste de Psicologia entrega **TODAS as 52 questões** disponíveis no banco
 - As questões são ordenadas cronologicamente (por `CreatedAt`)
 - **NÃO há seleção aleatória** para este tipo de teste
@@ -1049,7 +1073,7 @@ curl -X GET "http://localhost:5076/api/v2/tests/psych-test-guid?candidateId=0acf
     "questionOrder": 2,
     "pointValue": 2.0,
     "estimatedTimeSeconds": 30
-  },
+  }
   // ... mais 47 questões (total de 49)
 ]
 ```
@@ -1074,11 +1098,13 @@ curl -X POST "http://localhost:5076/api/v2/tests/psych-test-guid/answers?candida
 ```
 
 **⚠️ FORMATO CRÍTICO DO BODY**:
+
 - O body **DEVE SER UM ARRAY DIRETO** de respostas
 - **NÃO envolva** o array em um objeto com `testId`, `candidateId`, `answers`
 - O `candidateId` vai na **query string**, não no body
 
 **❌ ERRADO** (não funciona):
+
 ```json
 {
   "testId": "...",
@@ -1088,9 +1114,14 @@ curl -X POST "http://localhost:5076/api/v2/tests/psych-test-guid/answers?candida
 ```
 
 **✅ CORRETO** (funciona):
+
 ```json
 [
-  {"questionSnapshotId": "...", "selectedAnswers": ["A"], "responseTimeMs": 5000}
+  {
+    "questionSnapshotId": "...",
+    "selectedAnswers": ["A"],
+    "responseTimeMs": 5000
+  }
 ]
 ```
 
@@ -1165,12 +1196,12 @@ const updatePCDStatus = async (candidateId, isPCD) => {
   const response = await axios.patch(
     `/api/Candidate/${candidateId}/pcd`,
     {
-      isPCD: isPCD  // true se "Sim", false se "Não"
+      isPCD: isPCD, // true se "Sim", false se "Não"
     },
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        Authorization: `Bearer ${accessToken}`,
+      },
     }
   );
 
@@ -1178,8 +1209,9 @@ const updatePCDStatus = async (candidateId, isPCD) => {
 };
 
 // Exemplo de uso ao processar a resposta da questão 47
-if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
-  const isPCD = answer === 'A';  // 'A' = Sim, 'B' = Não
+if (question.id === "q-47") {
+  // "Você se enquadra como uma Pessoa PCD?"
+  const isPCD = answer === "A"; // 'A' = Sim, 'B' = Não
   await updatePCDStatus(candidateId, isPCD);
 }
 ```
@@ -1203,6 +1235,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 #### Possíveis Erros
 
 **404 Not Found** - Candidato não encontrado:
+
 ```json
 {
   "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
@@ -1210,6 +1243,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 ```
 
 **400 Bad Request** - Request body inválido:
+
 ```json
 {
   "error": "Request body is required"
@@ -1217,6 +1251,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 ```
 
 **401 Unauthorized** - Token ausente ou inválido:
+
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
@@ -1229,6 +1264,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 #### Quando Chamar Este Endpoint
 
 **Durante o Teste de Psicologia:**
+
 1. O candidato responde a **Questão 47** (Seção 9: Diversidade e Inclusão)
 2. Questão: "Você se enquadra como uma Pessoa PCD?"
 3. Opções: "Sim" ou "Não"
@@ -1236,6 +1272,7 @@ if (question.id === 'q-47') {  // "Você se enquadra como uma Pessoa PCD?"
 5. Envie `isPCD: true` se resposta for "Sim", ou `isPCD: false` se resposta for "Não"
 
 **Fluxo Recomendado:**
+
 ```javascript
 // Ao salvar resposta da questão 47 (PCD)
 const handlePsychologyAnswer = async (question, answer) => {
@@ -1243,8 +1280,8 @@ const handlePsychologyAnswer = async (question, answer) => {
   await saveAnswer(testId, questionId, answer);
 
   // 2. Se for a questão 47 (PCD), atualizar status PCD separadamente
-  if (question.id === 'q-47') {
-    const isPCD = answer === 'A';  // A = Sim, B = Não
+  if (question.id === "q-47") {
+    const isPCD = answer === "A"; // A = Sim, B = Não
     await updatePCDStatus(candidateId, isPCD);
   }
 };
@@ -1289,17 +1326,21 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b
 
 ```javascript
 // Quando o candidato responder sobre ser estrangeiro
-const updateForeignerStatus = async (candidateId, isForeigner, countryOfOrigin) => {
+const updateForeignerStatus = async (
+  candidateId,
+  isForeigner,
+  countryOfOrigin
+) => {
   const response = await axios.patch(
     `/api/Candidate/${candidateId}/foreigner`,
     {
       isForeigner: isForeigner,
-      countryOfOrigin: isForeigner ? countryOfOrigin : null
+      countryOfOrigin: isForeigner ? countryOfOrigin : null,
     },
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`
-      }
+        Authorization: `Bearer ${accessToken}`,
+      },
     }
   );
 
@@ -1307,8 +1348,8 @@ const updateForeignerStatus = async (candidateId, isForeigner, countryOfOrigin) 
 };
 
 // Exemplo de uso ao processar a resposta sobre ser estrangeiro
-if (question.text.includes('estrangeiro')) {
-  const isForeigner = answer === 'A';  // 'A' = Sim, 'B' = Não
+if (question.text.includes("estrangeiro")) {
+  const isForeigner = answer === "A"; // 'A' = Sim, 'B' = Não
   const country = isForeigner ? await showCountrySelector() : null;
   await updateForeignerStatus(candidateId, isForeigner, country);
 }
@@ -1334,6 +1375,7 @@ if (question.text.includes('estrangeiro')) {
 #### Possíveis Erros
 
 **400 Bad Request** - Request body inválido:
+
 ```json
 {
   "error": "Request body is required"
@@ -1341,6 +1383,7 @@ if (question.text.includes('estrangeiro')) {
 ```
 
 **400 Bad Request** - País de origem não informado quando estrangeiro:
+
 ```json
 {
   "error": "CountryOfOrigin is required when IsForeigner is true"
@@ -1348,6 +1391,7 @@ if (question.text.includes('estrangeiro')) {
 ```
 
 **404 Not Found** - Candidato não encontrado:
+
 ```json
 {
   "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
@@ -1355,6 +1399,7 @@ if (question.text.includes('estrangeiro')) {
 ```
 
 **401 Unauthorized** - Token ausente ou inválido:
+
 ```json
 {
   "type": "https://tools.ietf.org/html/rfc7235#section-3.1",
@@ -1367,6 +1412,7 @@ if (question.text.includes('estrangeiro')) {
 #### Quando Chamar Este Endpoint
 
 **Durante o Teste de Psicologia:**
+
 1. O candidato responde à questão sobre ser estrangeiro (Seção 9: Diversidade e Inclusão)
 2. Questão: "Você é estrangeiro?" ou similar
 3. Opções: "Sim" ou "Não"
@@ -1376,6 +1422,7 @@ if (question.text.includes('estrangeiro')) {
 7. Envie `isForeigner: false` se resposta for "Não" (countryOfOrigin será limpo automaticamente)
 
 **Fluxo Recomendado:**
+
 ```javascript
 // Ao salvar resposta sobre ser estrangeiro
 const handleForeignerQuestion = async (question, answer) => {
@@ -1383,7 +1430,7 @@ const handleForeignerQuestion = async (question, answer) => {
   await saveAnswer(testId, questionId, answer);
 
   // 2. Se a resposta for sobre ser estrangeiro
-  const isForeigner = answer === 'A';  // A = Sim, B = Não
+  const isForeigner = answer === "A"; // A = Sim, B = Não
 
   if (isForeigner) {
     // 3. Mostrar seletor de país
@@ -1399,6 +1446,7 @@ const handleForeignerQuestion = async (question, answer) => {
 ```
 
 **Importante**:
+
 - O campo `countryOfOrigin` é **obrigatório** quando `isForeigner` é `true`
 - O campo `countryOfOrigin` aceita código ISO 3166-1 alpha-2 (ex: "AR", "US", "CO") ou nome completo do país
 - Tamanho máximo: 100 caracteres
@@ -1452,22 +1500,22 @@ Invoke-RestMethod -Uri "http://localhost:5076/api/Candidate/0acf8567-0a49-4504-b
 // Upload de documento PCD
 const uploadPCDDocument = async (candidateId, file) => {
   const formData = new FormData();
-  formData.append('document', file);
+  formData.append("document", file);
 
   const response = await axios.post(
     `/api/Candidate/${candidateId}/pcd-document`,
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
           (progressEvent.loaded * 100) / progressEvent.total
         );
         console.log(`Upload: ${percentCompleted}%`);
-      }
+      },
     }
   );
 
@@ -1479,24 +1527,27 @@ const handlePCDDocumentUpload = async (event) => {
   const file = event.target.files[0];
 
   // Validar tipo de arquivo
-  const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  const allowedTypes = [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
   if (!allowedTypes.includes(file.type)) {
-    alert('Apenas arquivos PDF e DOCX são permitidos');
+    alert("Apenas arquivos PDF e DOCX são permitidos");
     return;
   }
 
   // Validar tamanho (10MB)
   const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
-    alert('O arquivo não pode exceder 10MB');
+    alert("O arquivo não pode exceder 10MB");
     return;
   }
 
   try {
     const result = await uploadPCDDocument(candidateId, file);
-    console.log('Documento enviado com sucesso:', result);
+    console.log("Documento enviado com sucesso:", result);
   } catch (error) {
-    console.error('Erro ao enviar documento:', error);
+    console.error("Erro ao enviar documento:", error);
   }
 };
 ```
@@ -1523,6 +1574,7 @@ const handlePCDDocumentUpload = async (event) => {
 #### Possíveis Erros
 
 **400 Bad Request** - Arquivo não fornecido:
+
 ```json
 {
   "error": "Document file is required"
@@ -1530,6 +1582,7 @@ const handlePCDDocumentUpload = async (event) => {
 ```
 
 **400 Bad Request** - Tamanho excedido:
+
 ```json
 {
   "error": "File size exceeds maximum allowed size of 10MB"
@@ -1537,6 +1590,7 @@ const handlePCDDocumentUpload = async (event) => {
 ```
 
 **400 Bad Request** - Formato inválido:
+
 ```json
 {
   "error": "Invalid file format. Only PDF and DOCX files are allowed"
@@ -1544,6 +1598,7 @@ const handlePCDDocumentUpload = async (event) => {
 ```
 
 **400 Bad Request** - MIME type inválido:
+
 ```json
 {
   "error": "Invalid file type. Only PDF and DOCX files are allowed"
@@ -1551,6 +1606,7 @@ const handlePCDDocumentUpload = async (event) => {
 ```
 
 **404 Not Found** - Candidato não encontrado:
+
 ```json
 {
   "error": "Candidate with ID 0acf8567-0a49-4504-b275-11c346a08a13 not found"
@@ -1568,8 +1624,8 @@ const handlePsychologyAnswer = async (question, answer) => {
   await saveAnswer(testId, questionId, answer);
 
   // Se for a questão 47 (PCD)
-  if (question.id === 'q-47') {
-    const isPCD = answer === 'A';  // A = Sim, B = Não
+  if (question.id === "q-47") {
+    const isPCD = answer === "A"; // A = Sim, B = Não
 
     // Atualizar status PCD
     await updatePCDStatus(candidateId, isPCD);
@@ -1588,8 +1644,13 @@ const showPCDDocumentUploadModal = () => {
   return (
     <div>
       <h3>Upload de Documento Comprobatório PCD</h3>
-      <p>Por favor, envie seu laudo médico ou certificado que comprove sua condição de PCD.</p>
-      <p><strong>Formatos aceitos:</strong> PDF, DOCX (máximo 10MB)</p>
+      <p>
+        Por favor, envie seu laudo médico ou certificado que comprove sua
+        condição de PCD.
+      </p>
+      <p>
+        <strong>Formatos aceitos:</strong> PDF, DOCX (máximo 10MB)
+      </p>
       <input
         type="file"
         accept=".pdf,.docx"
@@ -1601,6 +1662,7 @@ const showPCDDocumentUploadModal = () => {
 ```
 
 **Importante**:
+
 - O documento deve ser enviado **imediatamente após** o candidato informar que é PCD
 - O upload é **obrigatório** para candidatos PCD
 - O documento será armazenado de forma segura no Azure Blob Storage
@@ -1642,6 +1704,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/psych-test-guid/submit" \
 ```
 
 **⚠️ Notas Importantes**:
+
 - Testes de Psicologia **NÃO têm correção automática** (não há respostas certas ou erradas)
 - Os scores são sempre 0 (é um teste de perfil comportamental)
 - O status final é `Submitted` (não `Approved` ou `Rejected`)
@@ -1688,12 +1751,63 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 ```
 
 **Diferença dos outros testes**:
+
 - 29 questões com 6 opções cada (A-F)
 - Sem limite de tempo
 - Teste de memória e atenção visual
 - Auto-graded (correção automática ao submeter)
 
-*O workflow de resposta e submissão é idêntico ao teste de Psicologia.*
+### Workflow de Submissão - Retenção Visual
+
+**⚠️ IMPORTANTE**: O workflow é idêntico ao teste de Psicologia e requer **DUAS chamadas de API**:
+
+#### Passo 1: Submeter Respostas Individuais
+
+**Endpoint**: `POST /api/v2/tests/{testId}/answers?candidateId={candidateId}`
+
+```bash
+curl -X POST "http://localhost:5076/api/v2/tests/visual-test-guid/answers?candidateId=0acf8567-0a49-4504-b275-11c346a08a13" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {accessToken}" \
+  -d '[
+    {"questionSnapshotId": "q1-guid", "selectedAnswers": ["E"], "responseTimeMs": 0},
+    {"questionSnapshotId": "q2-guid", "selectedAnswers": ["C"], "responseTimeMs": 0},
+    {"questionSnapshotId": "q3-guid", "selectedAnswers": ["B"], "responseTimeMs": 0}
+    // ... todas as 29 respostas
+  ]'
+```
+
+**⚠️ FORMATO CRÍTICO**: Payload deve ser **ARRAY DIRETO** (não envolva em objeto).
+
+#### Passo 2: Finalizar Teste
+
+**Endpoint**: `POST /api/v2/tests/{testId}/submit`
+
+```bash
+curl -X POST "http://localhost:5076/api/v2/tests/visual-test-guid/submit" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer {accessToken}" \
+  -d '{
+    "candidateId": "0acf8567-0a49-4504-b275-11c346a08a13",
+    "answers": []
+  }'
+```
+
+**Resposta Esperada** (200 OK):
+
+```json
+{
+  "testId": "visual-test-guid",
+  "status": "Submitted",
+  "score": 29,
+  "rawScore": 29,
+  "maxPossibleScore": 29,
+  "correctAnswers": 29,
+  "totalQuestions": 29,
+  "durationSeconds": 300,
+  "message": "Test submitted successfully"
+}
+```
 
 ---
 
@@ -1759,14 +1873,18 @@ curl -X POST "http://localhost:5076/api/v2/tests" \
 #### JavaScript (Axios)
 
 ```javascript
-const response = await axios.post('/api/v2/tests', {
-  candidateId: candidateId,
-  testType: 5  // Interview
-}, {
-  headers: {
-    'Authorization': `Bearer ${accessToken}`
+const response = await axios.post(
+  "/api/v2/tests",
+  {
+    candidateId: candidateId,
+    testType: 5, // Interview
+  },
+  {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   }
-});
+);
 
 const testId = response.data.id;
 const questions = response.data.questions; // 5 questões já vêm no response
@@ -1785,35 +1903,35 @@ const questions = response.data.questions; // 5 questões já vêm no response
       "id": "04bb670f-c9d3-451a-afdb-252498cd9a2b",
       "questionText": "Conte-me sobre você: sua formação acadêmica, experiência profissional e o que o motiva nesta candidatura.",
       "questionOrder": 1,
-      "pointValue": 1.00,
+      "pointValue": 1.0,
       "estimatedTimeSeconds": 180
     },
     {
       "id": "0441df4a-1781-4f8e-a398-c866969d04d6",
       "questionText": "Descreva uma situação em que você teve que trabalhar sob pressão. Como você lidou com essa situação e qual foi o resultado?",
       "questionOrder": 2,
-      "pointValue": 1.00,
+      "pointValue": 1.0,
       "estimatedTimeSeconds": 180
     },
     {
       "id": "fbf67f96-1d4a-4a97-af27-8fe0996bf211",
       "questionText": "Conte sobre uma vez em que você teve um conflito com um colega de trabalho. Como você resolveu essa situação?",
       "questionOrder": 3,
-      "pointValue": 1.00,
+      "pointValue": 1.0,
       "estimatedTimeSeconds": 180
     },
     {
       "id": "e7837461-b2f8-4c55-8c08-58899803a574",
       "questionText": "Qual é a sua maior conquista profissional até o momento? Por que você considera isso uma conquista?",
       "questionOrder": 4,
-      "pointValue": 1.00,
+      "pointValue": 1.0,
       "estimatedTimeSeconds": 180
     },
     {
       "id": "5d39c0a9-b09e-46e7-aadd-a0e16fd8bdc9",
       "questionText": "Onde você se vê daqui a 5 anos? Quais são seus objetivos de carreira e como esta posição se alinha com esses objetivos?",
       "questionOrder": 5,
-      "pointValue": 1.00,
+      "pointValue": 1.0,
       "estimatedTimeSeconds": 180
     }
   ]
@@ -1851,6 +1969,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/start?candidateId={can
 **Endpoint**: `POST /api/v2/tests/{testId}/videos?candidateId={candidateId}`
 
 **⚠️ IMPORTANTE - Requisitos do Azure Blob Storage**:
+
 - Em **desenvolvimento**: Azurite deve estar rodando na porta 10000
   - Instalar: `npm install -g azurite`
   - Executar: `azurite-blob --location c:\azurite --debug c:\azurite\debug.log`
@@ -1859,6 +1978,7 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/start?candidateId={can
 **Content-Type**: `multipart/form-data`
 
 **Form Data**:
+
 - `questionSnapshotId` (obrigatório): ID da questão
 - `questionNumber` (obrigatório): Número da questão (1-5)
 - `videoFile` (obrigatório): Arquivo de vídeo com MIME type correto
@@ -1881,17 +2001,17 @@ curl -X POST "http://localhost:5076/api/v2/tests/{testId}/videos?candidateId={ca
 // Upload de vídeo para uma questão
 const uploadInterviewVideo = async (questionId, questionNumber, videoBlob) => {
   const formData = new FormData();
-  formData.append('questionSnapshotId', questionId);
-  formData.append('questionNumber', questionNumber);
-  formData.append('videoFile', videoBlob, 'interview-video.mp4');
+  formData.append("questionSnapshotId", questionId);
+  formData.append("questionNumber", questionNumber);
+  formData.append("videoFile", videoBlob, "interview-video.mp4");
 
   const response = await axios.post(
     `/api/v2/tests/${testId}/videos?candidateId=${candidateId}`,
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Content-Type': 'multipart/form-data'
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
       },
       onUploadProgress: (progressEvent) => {
         const percentCompleted = Math.round(
@@ -1900,7 +2020,7 @@ const uploadInterviewVideo = async (questionId, questionNumber, videoBlob) => {
         console.log(`Upload Q${questionNumber}: ${percentCompleted}%`);
         // Atualizar UI com progresso
         updateProgressBar(questionNumber, percentCompleted);
-      }
+      },
     }
   );
 
@@ -1974,12 +2094,12 @@ const response = await axios.post(
   {
     testId: testId,
     candidateId: candidateId,
-    answers: []  // Vazio para testes de vídeo
+    answers: [], // Vazio para testes de vídeo
   },
   {
     headers: {
-      'Authorization': `Bearer ${accessToken}`
-    }
+      Authorization: `Bearer ${accessToken}`,
+    },
   }
 );
 ```
@@ -2001,6 +2121,7 @@ const response = await axios.post(
 ```
 
 **⚠️ Notas Importantes**:
+
 - Testes de Entrevista **NÃO têm correção automática**
 - O `score` será `0` até a avaliação manual/IA
 - O status final é `Submitted` (aguardando avaliação)
@@ -2032,7 +2153,7 @@ curl -X GET "http://localhost:5076/api/v2/tests/candidate/{candidateId}/progress
       "testType": "Interview",
       "status": "Submitted",
       "isCompleted": true,
-      "score": 0.00,
+      "score": 0.0,
       "completedAt": "2025-11-17T13:47:24.121258"
     },
     "Portuguese": {
@@ -2063,6 +2184,7 @@ curl -X GET "http://localhost:5076/api/v2/tests/candidate/{candidateId}/progress
 **Status**: ✅ Todos os endpoints funcionando conforme documentado
 
 **Resultados da Validação**:
+
 - ✅ Criação de teste com 5 questões automáticas
 - ✅ Início do teste (NotStarted → InProgress)
 - ✅ Upload de 5 vídeos (~6MB cada) com sucesso
@@ -2217,29 +2339,29 @@ curl -X GET "http://localhost:5076/api/v2/tests/candidate/{candidateId}/progress
 
 ### Códigos de Sucesso
 
-| Código | Nome | Uso |
-|--------|------|-----|
-| `200` | OK | Operação bem-sucedida |
-| `201` | Created | Recurso criado (teste, resposta) |
-| `204` | No Content | Operação bem-sucedida sem retorno |
+| Código | Nome       | Uso                               |
+| ------ | ---------- | --------------------------------- |
+| `200`  | OK         | Operação bem-sucedida             |
+| `201`  | Created    | Recurso criado (teste, resposta)  |
+| `204`  | No Content | Operação bem-sucedida sem retorno |
 
 ### Códigos de Erro do Cliente
 
-| Código | Nome | Uso |
-|--------|------|-----|
-| `400` | Bad Request | Dados inválidos ou erro de validação |
-| `401` | Unauthorized | Token ausente ou inválido |
-| `403` | Forbidden | Sem permissão para o recurso |
-| `404` | Not Found | Recurso não encontrado |
-| `409` | Conflict | Conflito (teste já existe) |
-| `422` | Unprocessable Entity | Entidade não processável |
+| Código | Nome                 | Uso                                  |
+| ------ | -------------------- | ------------------------------------ |
+| `400`  | Bad Request          | Dados inválidos ou erro de validação |
+| `401`  | Unauthorized         | Token ausente ou inválido            |
+| `403`  | Forbidden            | Sem permissão para o recurso         |
+| `404`  | Not Found            | Recurso não encontrado               |
+| `409`  | Conflict             | Conflito (teste já existe)           |
+| `422`  | Unprocessable Entity | Entidade não processável             |
 
 ### Códigos de Erro do Servidor
 
-| Código | Nome | Uso |
-|--------|------|-----|
-| `500` | Internal Server Error | Erro interno do servidor |
-| `503` | Service Unavailable | Serviço temporariamente indisponível |
+| Código | Nome                  | Uso                                  |
+| ------ | --------------------- | ------------------------------------ |
+| `500`  | Internal Server Error | Erro interno do servidor             |
+| `503`  | Service Unavailable   | Serviço temporariamente indisponível |
 
 ---
 
@@ -2249,19 +2371,19 @@ curl -X GET "http://localhost:5076/api/v2/tests/candidate/{candidateId}/progress
 
 ```javascript
 function formatCPF(cpf) {
-  const cleaned = cpf.replace(/\D/g, '');
-  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  const cleaned = cpf.replace(/\D/g, "");
+  return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4");
 }
 
 // Uso
-formatCPF('07766468000'); // "077.664.680-00"
+formatCPF("07766468000"); // "077.664.680-00"
 ```
 
 ### JavaScript: Validação de CPF
 
 ```javascript
 function isValidCPF(cpf) {
-  cpf = cpf.replace(/\D/g, '');
+  cpf = cpf.replace(/\D/g, "");
 
   if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) {
     return false;
@@ -2291,7 +2413,7 @@ function isValidCPF(cpf) {
 }
 
 // Uso
-isValidCPF('077.664.680-00'); // true
+isValidCPF("077.664.680-00"); // true
 ```
 
 ### JavaScript: Timer de Teste
@@ -2299,7 +2421,7 @@ isValidCPF('077.664.680-00'); // true
 ```javascript
 function startTestTimer(timeLimitSeconds, onTick, onExpire) {
   const startTime = Date.now();
-  const endTime = startTime + (timeLimitSeconds * 1000);
+  const endTime = startTime + timeLimitSeconds * 1000;
 
   const interval = setInterval(() => {
     const now = Date.now();
@@ -2322,10 +2444,12 @@ const cleanup = startTestTimer(
   (remaining) => {
     const minutes = Math.floor(remaining / 60);
     const seconds = remaining % 60;
-    console.log(`Tempo restante: ${minutes}:${seconds.toString().padStart(2, '0')}`);
+    console.log(
+      `Tempo restante: ${minutes}:${seconds.toString().padStart(2, "0")}`
+    );
   },
   () => {
-    alert('Tempo esgotado!');
+    alert("Tempo esgotado!");
     submitTest();
   }
 );
@@ -2342,7 +2466,7 @@ function calculateProgress(answeredQuestions, totalQuestions) {
 <ProgressBar
   value={calculateProgress(currentQuestion, totalQuestions)}
   max={100}
-/>
+/>;
 ```
 
 ---
@@ -2354,6 +2478,7 @@ function calculateProgress(answeredQuestions, totalQuestions) {
 **Repositório**: https://github.com/bemol/dignus
 
 **Time de Desenvolvimento**:
+
 - Backend: Dignus Backend Team
 - Frontend: Bemol Digital Team
 
@@ -2368,6 +2493,7 @@ function calculateProgress(answeredQuestions, totalQuestions) {
 ### Changelog
 
 #### v1.0.0 (2025-11-10)
+
 - ✅ Documentação inicial completa
 - ✅ Workflow de autenticação testado
 - ✅ Workflow de consentimento LGPD testado
@@ -2389,4 +2515,4 @@ function calculateProgress(answeredQuestions, totalQuestions) {
 
 **Fim da Documentação v1.0.0**
 
-*Gerado automaticamente por Claude Code - Dignus Platform*
+_Gerado automaticamente por Claude Code - Dignus Platform_

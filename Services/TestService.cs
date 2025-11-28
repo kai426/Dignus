@@ -241,6 +241,14 @@ public class TestService : ITestService
 
         await _questionResponseRepo.SaveAsync();
 
+        // For two-step workflow: if no answers in current request, fetch all existing responses
+        if (responses.Count == 0)
+        {
+            _logger.LogInformation("No answers in current request, fetching all existing responses for test {TestId}", test.Id);
+            var existingResponses = await _questionResponseRepo.GetByTestIdAsync(test.Id);
+            responses.AddRange(existingResponses);
+        }
+
         // Auto-grade for objective questions
         await AutoGradeTestAsync(test, responses);
 
